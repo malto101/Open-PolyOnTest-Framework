@@ -5,9 +5,18 @@ use polytest_plugin_api::{Board, PluginError, Result};
 
 use crate::transport::ChildStdioTransport;
 
+/// Optional host-side filter env vars forwarded to the DUT.
+#[derive(Debug, Clone, Default)]
+pub struct HostFilter {
+    pub tag: Option<String>,
+    pub suite: Option<String>,
+    pub group: Option<String>,
+}
+
 pub struct HostBoard {
     pub binary: PathBuf,
     pub build_cmd: Option<String>,
+    pub filter: HostFilter,
 }
 
 impl HostBoard {
@@ -15,6 +24,7 @@ impl HostBoard {
         Self {
             binary,
             build_cmd: None,
+            filter: HostFilter::default(),
         }
     }
 
@@ -25,11 +35,20 @@ impl HostBoard {
                 self.binary.display()
             )));
         }
-        let child = Command::new(&self.binary)
-            .stdin(Stdio::null())
+        let mut cmd = Command::new(&self.binary);
+        cmd.stdin(Stdio::null())
             .stdout(Stdio::piped())
-            .stderr(Stdio::inherit())
-            .spawn()?;
+            .stderr(Stdio::inherit());
+        if let Some(tag) = &self.filter.tag {
+            cmd.env("POLYTEST_TAG", tag);
+        }
+        if let Some(suite) = &self.filter.suite {
+            cmd.env("POLYTEST_SUITE", suite);
+        }
+        if let Some(group) = &self.filter.group {
+            cmd.env("POLYTEST_GROUP", group);
+        }
+        let child = cmd.spawn()?;
         ChildStdioTransport::from_child(child)
     }
 }

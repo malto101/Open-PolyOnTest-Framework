@@ -1,0 +1,31 @@
+use std::env;
+use std::path::PathBuf;
+
+fn main() {
+    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
+    let root = manifest_dir.join("../..");
+    let harness_c = root.join("harness/c");
+    let include = root.join("harness/include");
+
+    println!("cargo:rerun-if-changed={}", harness_c.join("polytest_core.c").display());
+    println!("cargo:rerun-if-changed={}", harness_c.join("polytest_assert.c").display());
+    println!("cargo:rerun-if-changed={}", manifest_dir.join("tests.c").display());
+    println!("cargo:rerun-if-changed={}", include.join("polytest/polytest.h").display());
+
+    let mut build = cc::Build::new();
+    build
+        .file(harness_c.join("polytest_core.c"))
+        .file(harness_c.join("polytest_assert.c"))
+        .file(manifest_dir.join("tests.c"))
+        .include(&include)
+        .std("c11")
+        .define("POLYTEST_PROFILE_FULL", None);
+
+    let text = env::var_os("CARGO_FEATURE_TEXT").is_some();
+    let cobs = env::var_os("CARGO_FEATURE_COBS").is_some();
+    if text || !cobs {
+        build.define("POLYTEST_MINIMAL_PRINT", None);
+    }
+
+    build.compile("polytest_host_rust");
+}

@@ -55,11 +55,14 @@ cmake -S examples/host_c -B build/host_c -DPOLYTEST_PROFILE=full
 cmake --build build/host_c
 ./build/host_c/host_c_tests
 
-# Structured COBS + CLI reporters
+# Structured COBS + CLI reporters (optional --tag / --suite / --group)
 cmake -S examples/host_c -B build/host_c -DPOLYTEST_MINIMAL_PRINT=OFF -DPOLYTEST_PROFILE=full
 cmake --build build/host_c
 cargo run -p open-polytest -- run --target host --config examples/host_c/polytest.toml
+cargo run -p open-polytest -- run --target host --config examples/host_c/polytest.toml --tag smoke
 ```
+
+Parameterized tables use `PARAM_TEST` / `PARAM_AS` (small/full). See [docs/quickstart.md](docs/quickstart.md).
 
 ## Mocking (FFF)
 

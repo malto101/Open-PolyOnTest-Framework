@@ -1,0 +1,58 @@
+# CLI reference
+
+Binary crate: `open-polytest` (command: `polytest`).
+
+## Commands
+
+```bash
+polytest plugins
+polytest run --target <name> --config path/to/polytest.toml \
+  [--tag TAG] [--suite SUITE] [--group GROUP]
+```
+
+| Flag | Meaning |
+|------|---------|
+| `--target` | Key under `[target.<name>]` in the toml (default `host`) |
+| `--config` | Path to `polytest.toml` |
+| `--tag` | Host only — sets `POLYTEST_TAG` for the DUT |
+| `--suite` | Host only — sets `POLYTEST_SUITE` |
+| `--group` | Host only — sets `POLYTEST_GROUP` (requires `--suite`) |
+
+CLI filter flags **override** matching keys in the toml.
+
+## Toml schema (`[target.*]`)
+
+| Key | Default | Notes |
+|-----|---------|-------|
+| `board` | `host` | `host`, `qemu_m33` |
+| `transport` | `stdio` | `stdio` (host), `uart` (qemu) |
+| `codec` | `cobs` | `cobs`, `text` |
+| `mode` | `stream` | only `stream` in v0.1 |
+| `reporters` | `console`, `junit` | also `json` |
+| `binary` | `./test_bin` | host binary or QEMU ELF |
+| `build` | — | shell command run before spawn |
+| `timeout_ms` | `30000` | stream deadline |
+| `tag` / `suite` / `group` | — | host filters (same as CLI) |
+
+Example:
+
+```toml
+[target.host]
+board = "host"
+transport = "stdio"
+codec = "cobs"
+mode = "stream"
+reporters = ["console", "junit", "json"]
+binary = "build/host_c/host_c_tests"
+tag = "smoke"
+timeout_ms = 10000
+```
+
+## Host vs QEMU filters
+
+| Board | Execution filter |
+|-------|------------------|
+| `host` | Env vars → DUT `polytest_run_from_env()` |
+| `qemu_m33` | **Not supported** — freestanding has no `getenv`. CLI errors if filters are set. Hard-code `polytest_run_tag` / `run_suite` in the QEMU `main` if needed. |
+
+DUT binaries should call `polytest_run_from_env()` (or the C++/Rust wrappers) so filters take effect.

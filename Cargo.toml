@@ -6,6 +6,7 @@ members = [
     "crates/polytest-builtins",
     "crates/polytest-cli",
     "crates/polytest-rs",
+    "examples/host_rust",
 ]
 default-members = ["crates/polytest-cli"]
 

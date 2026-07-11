@@ -6,7 +6,8 @@ use std::time::Duration;
 use anyhow::{bail, Context, Result};
 use clap::{Parser, Subcommand};
 use polytest_builtins::{
-    CobsCodec, ConsoleReporter, HostBoard, JsonReporter, JunitReporter, QemuM33Board, TextCodec,
+    CobsCodec, ConsoleReporter, HostBoard, HostFilter, JsonReporter, JunitReporter, QemuM33Board,
+    TextCodec,
 };
 use polytest_plugin_api::{Board, Codec, Reporter, Transport};
 use polytest_protocol::Event;
@@ -29,6 +30,15 @@ enum Commands {
         /// Config file
         #[arg(long, default_value = "polytest.toml")]
         config: PathBuf,
+        /// Filter by tag (host only; sets POLYTEST_TAG)
+        #[arg(long)]
+        tag: Option<String>,
+        /// Filter by suite name (host only; sets POLYTEST_SUITE)
+        #[arg(long)]
+        suite: Option<String>,
+        /// Filter by group name; requires --suite (host only; sets POLYTEST_GROUP)
+        #[arg(long)]
+        group: Option<String>,
     },
     /// List built-in plugins
     Plugins,
@@ -57,6 +67,10 @@ struct TargetConfig {
     build: Option<String>,
     #[serde(default = "default_timeout_ms")]
     timeout_ms: u64,
+    /// Optional host filters (CLI flags override these).
+    tag: Option<String>,
+    suite: Option<String>,
+    group: Option<String>,
 }
 
 fn default_board() -> String {
@@ -89,11 +103,42 @@ fn main() -> Result<()> {
             println!("extensions: core_stream (default)");
             Ok(())
         }
-        Commands::Run { target, config } => run_target(&config, &target),
+        Commands::Run {
+            target,
+            config,
+            tag,
+            suite,
+            group,
+        } => run_target(&config, &target, tag, suite, group),
     }
 }
 
-fn run_target(config_path: &Path, target_name: &str) -> Result<()> {
+fn merge_filter(
+    t: &TargetConfig,
+    tag: Option<String>,
+    suite: Option<String>,
+    group: Option<String>,
+) -> HostFilter {
+    HostFilter {
+        tag: tag.or_else(|| t.tag.clone()),
+        suite: suite.or_else(|| t.suite.clone()),
+        group: group.or_else(|| t.group.clone()),
+    }
+}
+
+fn filter_active(f: &HostFilter) -> bool {
+    f.tag.as_ref().is_some_and(|s| !s.is_empty())
+        || f.suite.as_ref().is_some_and(|s| !s.is_empty())
+        || f.group.as_ref().is_some_and(|s| !s.is_empty())
+}
+
+fn run_target(
+    config_path: &Path,
+    target_name: &str,
+    tag: Option<String>,
+    suite: Option<String>,
+    group: Option<String>,
+) -> Result<()> {
     let raw = std::fs::read_to_string(config_path)
         .with_context(|| format!("reading {}", config_path.display()))?;
     let cfg: Config = toml::from_str(&raw)?;
@@ -117,12 +162,20 @@ fn run_target(config_path: &Path, target_name: &str) -> Result<()> {
         bail!("board.qemu_m33 expects transport = \"uart\"");
     }
 
+    let filter = merge_filter(&t, tag, suite, group);
+    if filter.group.as_ref().is_some_and(|g| !g.is_empty())
+        && !filter.suite.as_ref().is_some_and(|s| !s.is_empty())
+    {
+        bail!("--group / toml group requires --suite / toml suite");
+    }
+
     let binary = t.binary.clone().unwrap_or_else(|| PathBuf::from("./test_bin"));
 
     match t.board.as_str() {
         "host" => {
             let mut board = HostBoard::new(binary);
             board.build_cmd = t.build.clone();
+            board.filter = filter;
             board.prepare()?;
             let mut transport = board.spawn_transport()?;
             drain_stream(&mut transport, &t)?;
@@ -132,6 +185,12 @@ fn run_target(config_path: &Path, target_name: &str) -> Result<()> {
             }
         }
         "qemu_m33" => {
+            if filter_active(&filter) {
+                bail!(
+                    "tag/suite/group filters are host-only (freestanding QEMU has no getenv). \
+                     Filter in the DUT main, or run on board.host."
+                );
+            }
             let mut board = QemuM33Board::new(binary);
             if let Some(cmd) = &t.build {
                 let status = std::process::Command::new("sh").arg("-c").arg(cmd).status()?;

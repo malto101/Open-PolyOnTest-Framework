@@ -6,9 +6,12 @@ theme:
   name: material
 nav:
   - Home: index.md
-  - Architecture: architecture.md
   - Quickstart: quickstart.md
+  - Architecture: architecture.md
   - Profiles: profiles.md
+  - CLI: cli.md
+  - Tags: tags.md
   - Mocking: mocking.md
   - Plugins: plugins.md
+  - C++: cpp.md
   - Rust: rust.md

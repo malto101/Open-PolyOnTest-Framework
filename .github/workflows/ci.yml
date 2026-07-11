@@ -40,6 +40,32 @@ jobs:
         run: cmake --build build/host_c
       - name: Run via polytest CLI
         run: cargo run -p open-polytest -- run --target host --config examples/host_c/polytest.toml
+      - name: Run via polytest CLI (tag filter)
+        run: cargo run -p open-polytest -- run --target host --config examples/host_c/polytest.toml --tag smoke
+      - name: Configure host C++
+        run: cmake -S examples/host_cpp -B build/host_cpp -DPOLYTEST_MINIMAL_PRINT=ON -DPOLYTEST_PROFILE=full
+      - name: Build host C++
+        run: cmake --build build/host_cpp
+      - name: Run host C++
+        run: ./build/host_cpp/host_cpp_tests
+      - name: Build host Rust
+        run: cargo build -p polytest-host-rust
+      - name: Run host Rust
+        run: cargo run -p polytest-host-rust
+      - name: Build host Rust (COBS)
+        run: cargo build -p polytest-host-rust --no-default-features --features cobs
+      - name: Run host Rust via CLI
+        run: |
+          BIN_DIR=$(cargo metadata --format-version 1 --no-deps | python3 -c "import json,sys; print(json.load(sys.stdin)['target_directory'])")
+          SRC="${BIN_DIR}/debug/host_rust_tests"
+          DST="target/debug/host_rust_tests"
+          mkdir -p target/debug
+          # When CARGO_TARGET_DIR is the default ./target, SRC and DST are the same file.
+          if [ "$(realpath "$SRC")" != "$(realpath -m "$DST")" ]; then
+            cp "$SRC" "$DST"
+          fi
+          test -x "$DST"
+          cargo run -p open-polytest -- run --target host --config examples/host_rust/polytest.toml
       - name: Upload reports
         uses: actions/upload-artifact@v4
         if: always()

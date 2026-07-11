@@ -102,6 +102,22 @@ int polytest_register_heap_case(const char *suite, const char *group,
 int polytest_run_all(void);
 /** Run cases whose suite, group, or case tags include `tag` (stub on tiny). */
 int polytest_run_tag(const char *tag);
+/** Run cases belonging to `suite` (strcmp on case suite name). */
+int polytest_run_suite(const char *suite);
+/** Run cases in `suite`/`group`. */
+int polytest_run_group(const char *suite, const char *group);
+/**
+ * Host helper: honor POLYTEST_TAG, POLYTEST_SUITE+POLYTEST_GROUP, or
+ * POLYTEST_SUITE from the environment; otherwise run all.
+ * On freestanding targets, always runs all.
+ */
+int polytest_run_from_env(void);
+
+/** Parameterized-test cursor (set by PARAM_TEST / FOR_EACH). */
+void polytest_set_param(size_t index, const void *param);
+void polytest_clear_param(void);
+size_t polytest_param_index(void);
+const void *polytest_current_param(void);
 
 void polytest_ignore(const char *message);
 int polytest_protect(void);
@@ -498,16 +514,52 @@ void polytest_assert_bits_low(uint32_t mask, uint32_t actual, const char *msg,
 
 /**
  * Parameterized helper — invoke body once per table row from inside a TEST.
+ * Sets the param cursor so failures can append `[param=<index>]`.
  */
 #define POLYTEST_FOR_EACH(type, var, array)                                    \
     for (size_t _pt_i = 0;                                                     \
          _pt_i < sizeof(array) / sizeof((array)[0]); ++_pt_i)                  \
-        for (type var = (array)[_pt_i], *_pt_once = &var; _pt_once;             \
-             _pt_once = NULL)
+        for (type var = (array)[_pt_i],                                         \
+                 *_pt_once = (polytest_set_param(_pt_i, &(var)), &var);        \
+             _pt_once;                                                         \
+             _pt_once = (polytest_clear_param(), (type *)NULL))
+
+/** Typed view of the current PARAM_TEST / FOR_EACH row. */
+#define POLYTEST_PARAM_AS(type) (*(const type *)polytest_current_param())
+
+/**
+ * Register one case that runs `table` row-by-row. Body uses PARAM_AS(type).
+ * Requires small/full profile (fixtures/hierarchy enabled).
+ */
+#if POLYTEST_CFG_HAS_FIXTURES
+#define POLYTEST_PARAM_TEST(suite_name, group_name, case_name, type, table)    \
+    static void polytest_param_impl_##suite_name##_##group_name##_##case_name( \
+        void);                                                                 \
+    POLYTEST_TEST(suite_name, group_name, case_name) {                         \
+        size_t _pt_n = sizeof(table) / sizeof((table)[0]);                     \
+        size_t _pt_i;                                                          \
+        for (_pt_i = 0; _pt_i < _pt_n; ++_pt_i) {                              \
+            polytest_set_param(_pt_i, &(table)[_pt_i]);                        \
+            polytest_param_impl_##suite_name##_##group_name##_##case_name();   \
+            polytest_clear_param();                                            \
+        }                                                                      \
+    }                                                                          \
+    static void polytest_param_impl_##suite_name##_##group_name##_##case_name( \
+        void)
+#else
+#define POLYTEST_PARAM_TEST(suite_name, group_name, case_name, type, table)    \
+    POLYTEST_PARAM_TEST_requires_small_or_full_profile(suite_name, group_name, \
+                                                       case_name, type, table)
+#endif
 
 #ifndef POLYTEST_NO_ALIASES
 #define TEST POLYTEST_TEST
 #define TEST_TAGS POLYTEST_TEST_TAGS
+#define FOR_EACH POLYTEST_FOR_EACH
+#define PARAM_AS POLYTEST_PARAM_AS
+#if POLYTEST_CFG_HAS_FIXTURES
+#define PARAM_TEST POLYTEST_PARAM_TEST
+#endif
 #define ASSERT_TRUE POLYTEST_ASSERT_TRUE
 #define ASSERT_TRUE_MESSAGE POLYTEST_ASSERT_TRUE_MESSAGE
 #define ASSERT_FALSE POLYTEST_ASSERT_FALSE

@@ -1,0 +1,23 @@
+[package]
+name = "polytest-host-rust"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[[bin]]
+name = "host_rust_tests"
+path = "src/main.rs"
+
+[features]
+default = ["text"]
+# Human-readable harness output (POLYTEST_MINIMAL_PRINT).
+text = []
+# COBS stream for the CLI (omit MINIMAL_PRINT).
+cobs = []
+
+[dependencies]
+polytest-rs = { path = "../../crates/polytest-rs", features = ["std"] }
+
+[build-dependencies]
+cc = "1"

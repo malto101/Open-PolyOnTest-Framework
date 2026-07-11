@@ -20,7 +20,7 @@ int strcmp(const char *a, const char *b);
 #include <string.h>
 #endif
 
-#if POLYTEST_CFG_HAS_HEAP
+#if POLYTEST_CFG_HAS_HEAP || !defined(POLYTEST_FREESTANDING)
 #include <stdlib.h>
 #endif
 
@@ -52,6 +52,11 @@ static unsigned g_skipped;
 static const char *g_cur_suite;
 static const char *g_cur_group;
 static const char *g_cur_name;
+
+static const void *g_param;
+static int g_param_active;
+static size_t g_param_index;
+static const char *g_filter_group;
 
 #if POLYTEST_CFG_HAS_MUTEX
 static polytest_lock_fn_t g_lock;
@@ -396,7 +401,40 @@ static void emit_msg(uint8_t type, const char *a, const char *b, const char *c,
 
 #endif /* COBS */
 
+void polytest_set_param(size_t index, const void *param) {
+    g_param_index = index;
+    g_param = param;
+    g_param_active = 1;
+}
+
+void polytest_clear_param(void) {
+    g_param = NULL;
+    g_param_active = 0;
+    g_param_index = 0;
+}
+
+size_t polytest_param_index(void) { return g_param_index; }
+
+const void *polytest_current_param(void) { return g_param; }
+
+static const char *message_with_param(const char *message, char *buf,
+                                      size_t cap) {
+    const char *base = message ? message : "fail";
+    if (!g_param_active) {
+        return base;
+    }
+    size_t at = 0;
+    at = append_str(buf, cap, at, base);
+    at = append_str(buf, cap, at, " [param=");
+    at = append_u32(buf, cap, at, (unsigned)g_param_index);
+    at = append_str(buf, cap, at, "]");
+    (void)at;
+    return buf;
+}
+
 void polytest_fail_at(const char *file, int line, const char *message) {
+    char param_msg[192];
+    const char *msg = message_with_param(message, param_msg, sizeof(param_msg));
     pt_lock();
     g_current_failed = 1;
     pt_unlock();
@@ -410,14 +448,13 @@ void polytest_fail_at(const char *file, int line, const char *message) {
     at = append_str(buf, sizeof(buf), at, ":");
     at = append_i32(buf, sizeof(buf), at, line);
     at = append_str(buf, sizeof(buf), at, " ");
-    at = append_str(buf, sizeof(buf), at, message ? message : "fail");
+    at = append_str(buf, sizeof(buf), at, msg);
     (void)at;
     emit_line(buf);
 #else
     char leaf[128];
     format_case_leaf(leaf, sizeof(leaf), g_cur_group, g_cur_name);
-    emit_msg(PT_MSG_ASSERT_FAIL, g_cur_suite, leaf, message ? message : "fail",
-             (uint32_t)line, 0, 0);
+    emit_msg(PT_MSG_ASSERT_FAIL, g_cur_suite, leaf, msg, (uint32_t)line, 0, 0);
     (void)file;
 #endif
 }
@@ -777,6 +814,15 @@ static int match_all(const polytest_case_t *t, const char *tag) {
     return 1;
 }
 
+static int match_suite(const polytest_case_t *t, const char *suite) {
+    return suite && str_cmp(t->suite, suite) == 0;
+}
+
+static int match_group(const polytest_case_t *t, const char *suite) {
+    return suite && g_filter_group && str_cmp(t->suite, suite) == 0 &&
+           str_cmp(t->group, g_filter_group) == 0;
+}
+
 #if POLYTEST_CFG_HAS_TAGS
 static int match_tag(const polytest_case_t *t, const char *tag) {
     return case_matches_tag(t, tag);
@@ -793,6 +839,41 @@ int polytest_run_tag(const char *tag) {
     return run_filtered(match_tag, tag);
 #else
     (void)tag;
+    return polytest_run_all();
+#endif
+}
+
+int polytest_run_suite(const char *suite) {
+    if (!suite || !suite[0]) {
+        return polytest_run_all();
+    }
+    return run_filtered(match_suite, suite);
+}
+
+int polytest_run_group(const char *suite, const char *group) {
+    if (!suite || !suite[0] || !group || !group[0]) {
+        return polytest_run_all();
+    }
+    g_filter_group = group;
+    return run_filtered(match_group, suite);
+}
+
+int polytest_run_from_env(void) {
+#if defined(POLYTEST_FREESTANDING)
+    return polytest_run_all();
+#else
+    const char *tag = getenv("POLYTEST_TAG");
+    const char *suite = getenv("POLYTEST_SUITE");
+    const char *group = getenv("POLYTEST_GROUP");
+    if (tag && tag[0]) {
+        return polytest_run_tag(tag);
+    }
+    if (suite && suite[0] && group && group[0]) {
+        return polytest_run_group(suite, group);
+    }
+    if (suite && suite[0]) {
+        return polytest_run_suite(suite);
+    }
     return polytest_run_all();
 #endif
 }

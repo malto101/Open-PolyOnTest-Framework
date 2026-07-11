@@ -1,14 +1,25 @@
 /**
- * Host C smoke tests — suite/group fixtures, tags, asserts, IGNORE, PROTECT.
+ * Host C smoke tests — suite/group fixtures, tags, asserts, IGNORE, PROTECT,
+ * parameterized cases.
  */
 #include "polytest/polytest.h"
-
-#include <stdlib.h>
 
 static int add(int a, int b) { return a + b; }
 
 static int g_suite_ready;
 static int g_group_value;
+
+typedef struct {
+    int a;
+    int b;
+    int sum;
+} add_case_t;
+
+static const add_case_t k_add_cases[] = {
+    {2, 3, 5},
+    {0, 0, 0},
+    {-1, 1, 0},
+};
 
 POLYTEST_SUITE_SETUP(Math) { g_suite_ready = 1; }
 POLYTEST_SUITE_TEARDOWN(Math) { g_suite_ready = 0; }
@@ -68,11 +79,16 @@ TEST(Math, Basic, ProtectRegion) {
     ASSERT_TRUE(entered);
 }
 
+#if POLYTEST_CFG_HAS_FIXTURES
+PARAM_TEST(Math, Basic, AddTable, add_case_t, k_add_cases) {
+    const add_case_t row = PARAM_AS(add_case_t);
+    ASSERT_EQ(row.sum, add(row.a, row.b));
+}
+#endif
+
 TEST(Expect, Pointers, NotNull) {
     int x = 1;
     ASSERT_NOT_NULL(&x);
 }
 
-int main(void) {
-    return polytest_run_all();
-}
+int main(void) { return polytest_run_from_env(); }

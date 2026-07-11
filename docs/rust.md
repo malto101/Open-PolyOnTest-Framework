@@ -3,42 +3,48 @@
 The [`polytest-rs`](../crates/polytest-rs) crate is a thin FFI-facing adapter.
 Default is `#![no_std]`; enable the `std` feature for host helpers.
 
-## Link the C harness
+A `#[polytest::test]` proc-macro is **future work** and not required for v1 —
+register cases from C (`TEST` macros) and drive the runner from Rust.
 
-Build/link `polytest_core.c` + `polytest_assert.c` (or `dist/polytest.c`) into
-your Rust binary or a `cc` build script, then call:
+## Host example
 
-```rust
-extern "C" {
-    fn polytest_run_all() -> i32;
-}
+[`examples/host_rust`](../examples/host_rust) compiles the C harness + a small
+`tests.c` via `build.rs`, then calls `run_from_env()` from Rust.
 
-fn main() {
-    let code = unsafe { polytest_run_all() };
-    std::process::exit(code);
-}
+On macOS/ELF linkers, constructor registration in a static archive can be
+dead-stripped; the example calls `polytest_host_rust_link_anchor()` so `tests.c`
+stays in the final binary.
+
+```bash
+# Human-readable
+cargo run -p polytest-host-rust
+
+# Tag filter
+POLYTEST_TAG=unit cargo run -p polytest-host-rust
+
+# COBS + CLI
+cargo build -p polytest-host-rust --no-default-features --features cobs
+cargo run -p open-polytest -- run --target host \
+  --config examples/host_rust/polytest.toml
 ```
 
-Register cases from C (ctors / `POLYTEST_TEST`) or via
-`polytest_register` / `polytest_register_heap_case` if you expose those symbols.
-
-`polytest-rs` re-exports the FFI declarations behind the `ffi` module when the
-crate is linked:
+## API (`std` feature)
 
 ```rust
-use polytest_rs::ffi::polytest_run_all;
+use polytest_rs::std_support;
+
+std_support::run_all();
+std_support::run_tag("smoke");
+std_support::run_suite("RustHost");
+std_support::run_group("RustHost", "Basic");
+std_support::run_from_env();
 ```
+
+FFI symbols live under `polytest_rs::ffi` (also usable from `no_std`).
 
 ## Features
 
 | Feature | Default | Meaning |
 |---------|---------|---------|
-| (none) | `no_std` | Version marker + FFI signatures only |
-| `std` | off | Enables `std` for host binaries |
-
-A `#[polytest::test]` proc-macro is **future work** and not required for v1.
-
-## Example sketch
-
-See comments in `crates/polytest-rs/src/lib.rs`. A full `examples/host_rust`
-binary can wrap the same pattern once a `build.rs` compiles the amalgam.
+| (none) | `no_std` | Version marker + FFI signatures |
+| `std` | off | Host helpers (`run_*`, `run_from_env`) |
