@@ -1,19 +1,22 @@
 # Rust adapter (`polytest-rs`)
 
-The [`polytest-rs`](../crates/polytest-rs) crate is a thin FFI-facing adapter.
-Default is `#![no_std]`; enable the `std` feature for host helpers.
+The [`polytest-rs`](https://github.com/malto101/Open-PolyTest-Framework/tree/main/crates/polytest-rs)
+crate is a thin FFI-facing adapter. Default is `#![no_std]`; enable the `std`
+feature for host helpers.
 
 A `#[polytest::test]` proc-macro is **future work** and not required for v1 —
 register cases from C (`TEST` macros) and drive the runner from Rust.
 
 ## Host example
 
-[`examples/host_rust`](../examples/host_rust) compiles the C harness + a small
-`tests.c` via `build.rs`, then calls `run_from_env()` from Rust.
+[`examples/host_rust`](https://github.com/malto101/Open-PolyTest-Framework/tree/main/examples/host_rust)
+compiles the C harness + a small `tests.c` via `build.rs`, then calls
+`run_from_env()` from Rust.
 
-On macOS/ELF linkers, constructor registration in a static archive can be
-dead-stripped; the example calls `polytest_host_rust_link_anchor()` so `tests.c`
-stays in the final binary.
+!!! note "Linker anchors"
+    On macOS/ELF linkers, constructor registration in a static archive can be
+    dead-stripped; the example calls `polytest_host_rust_link_anchor()` so
+    `tests.c` stays in the final binary.
 
 ```bash
 # Human-readable
@@ -48,3 +51,6 @@ FFI symbols live under `polytest_rs::ffi` (also usable from `no_std`).
 |---------|---------|---------|
 | (none) | `no_std` | Version marker + FFI signatures |
 | `std` | off | Host helpers (`run_*`, `run_from_env`) |
+
+See [CLI](cli.md) for structured reporting and [Architecture](architecture.md)
+for how the host drains the stream.

@@ -13,6 +13,10 @@ TEST_TAGS(Math, Basic, SkipMe, "skipdemo") { IGNORE(); }
 A case matches a tag filter if **any** of its own tags, its group tags, or its
 suite tags contain the requested string.
 
+!!! warning "Profile gated"
+    Tags require `POLYTEST_CFG_HAS_TAGS` (small/full). The tiny profile has no
+    tag filtering — use separate binaries or hard-coded runner entry points.
+
 ## Running a subset
 
 ### In-process
@@ -45,4 +49,4 @@ cargo run -p open-polytest -- run --target host \
   --config examples/host_c/polytest.toml --tag smoke
 ```
 
-See [cli.md](cli.md). Filters are **host-only** in v0.1.
+See [CLI](cli.md). Filters are **host-only** in v0.1.

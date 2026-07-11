@@ -28,8 +28,10 @@ cmake -S examples/host_cpp -B build/host_cpp -DPOLYTEST_PROFILE=full
 cmake --build build/host_cpp
 ./build/host_cpp/host_cpp_tests
 
-# Tag filter via env (or CLI — see cli.md)
+# Tag filter via env (or CLI — see CLI)
 POLYTEST_TAG=unit ./build/host_cpp/host_cpp_tests
 ```
 
 `PARAM_TEST` works the same as in C when using the small/full profile.
+
+See [Quickstart](quickstart.md) and [Tags](tags.md).

@@ -2,6 +2,28 @@
 
 Binary crate: `open-polytest` (command: `polytest`).
 
+## Run pipeline
+
+```mermaid
+flowchart TD
+  inv["polytest run --target T --config cfg"] --> load[Load polytest.toml]
+  load --> resolve[Resolve board / transport / codec / reporters]
+  resolve --> flags{CLI --tag / --suite / --group?}
+  flags -->|Yes| override[Override toml filter keys]
+  flags -->|No| useToml[Use toml filters if any]
+  override --> buildStep{build key set?}
+  useToml --> buildStep
+  buildStep -->|Yes| shell[Run shell build]
+  buildStep -->|No| spawn
+  shell --> spawn[Board prepare + Transport open]
+  spawn --> drain[Read bytes → Codec → Reporters]
+  drain --> done{Event::Done?}
+  done -->|No| drain
+  done -->|Yes| finish[reporter.finish]
+  finish --> arts["report.xml / report.json / console"]
+  finish --> exitCode[Exit 0 or 1]
+```
+
 ## Commands
 
 ```bash
@@ -48,6 +70,11 @@ tag = "smoke"
 timeout_ms = 10000
 ```
 
+!!! note "Board / transport pairing"
+    `host` requires `transport = "stdio"`. `qemu_m33` requires
+    `transport = "uart"` (semihosting → QEMU stderr). See
+    [Architecture](architecture.md).
+
 ## Host vs QEMU filters
 
 | Board | Execution filter |
@@ -56,3 +83,5 @@ timeout_ms = 10000
 | `qemu_m33` | **Not supported** — freestanding has no `getenv`. CLI errors if filters are set. Hard-code `polytest_run_tag` / `run_suite` in the QEMU `main` if needed. |
 
 DUT binaries should call `polytest_run_from_env()` (or the C++/Rust wrappers) so filters take effect.
+
+See also [Tags](tags.md).

@@ -2,7 +2,7 @@
 
 PolyTest does not ship a Ruby/codegen mock generator. For C unit tests that need
 fakes, use the header-only helpers in
-[`plugins/extension/fff_fakes/polytest_fff.h`](../plugins/extension/fff_fakes/polytest_fff.h).
+[`plugins/extension/fff_fakes/polytest_fff.h`](https://github.com/malto101/Open-PolyTest-Framework/blob/main/plugins/extension/fff_fakes/polytest_fff.h).
 
 ## vs CMock
 
@@ -53,5 +53,6 @@ cmake --build build/host_fff
 ./build/host_fff/host_fff_tests
 ```
 
-Suggested profile: **small** (or default full). Tiny works if you avoid float
-asserts and do not rely on suite fixtures.
+!!! tip "Suggested profile"
+    Use **small** (or default full). Tiny works if you avoid float asserts and
+    do not rely on suite fixtures.

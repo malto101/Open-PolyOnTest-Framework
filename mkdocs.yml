@@ -1,17 +1,87 @@
 site_name: PolyTest
 site_description: Embedded-first multi-language test framework
+site_author: PolyTest contributors
 docs_dir: docs
 repo_url: https://github.com/malto101/Open-PolyTest-Framework
+repo_name: malto101/Open-PolyTest-Framework
+edit_uri: edit/main/docs/
+copyright: Copyright &copy; PolyTest contributors — Apache-2.0
+
 theme:
   name: material
+  logo: assets/logo.svg
+  favicon: assets/favicon.svg
+  font:
+    text: IBM Plex Sans
+    code: IBM Plex Mono
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: slate
+      accent: teal
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: slate
+      accent: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - toc.follow
+
+plugins:
+  - search
+
+extra_css:
+  - stylesheets/extra.css
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+
 nav:
   - Home: index.md
-  - Quickstart: quickstart.md
-  - Architecture: architecture.md
-  - Profiles: profiles.md
-  - CLI: cli.md
-  - Tags: tags.md
-  - Mocking: mocking.md
-  - Plugins: plugins.md
-  - C++: cpp.md
-  - Rust: rust.md
+  - Getting started:
+      - Quickstart: quickstart.md
+  - Concepts:
+      - Overview: concepts.md
+      - Architecture: architecture.md
+      - Profiles: profiles.md
+      - Tags: tags.md
+  - Host tooling:
+      - CLI: cli.md
+      - Plugins: plugins.md
+      - Mocking: mocking.md
+  - Language adapters:
+      - C++: cpp.md
+      - Rust: rust.md

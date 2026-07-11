@@ -3,6 +3,28 @@
 PolyTest Core can strip features at compile time so the same harness fits a
 hobby MCU (tiny) or a host CI binary (full).
 
+## Choosing a profile
+
+```mermaid
+flowchart TD
+  start([Pick a profile]) --> flash{Flash / RAM tight?}
+  flash -->|Very tight ~1–3 KB| tiny[POLYTEST_PROFILE_TINY]
+  flash -->|Moderate MCU| small[POLYTEST_PROFILE_SMALL]
+  flash -->|Host CI or roomy target| full[POLYTEST_PROFILE_FULL]
+  tiny --> textOnly[Text path only — no tags / fixtures / float]
+  small --> knobsSmall{Need float asserts?}
+  knobsSmall -->|No| smallDefault[Float off by default]
+  knobsSmall -->|Yes| enableFloat[Do not set EXCLUDE_FLOAT carefully]
+  full --> knobsFull{Multithreaded host?}
+  knobsFull -->|Yes| mutex[polytest_set_locks]
+  knobsFull -->|No| fullDefault[Default full features]
+  textOnly --> ortho[Orthogonal knobs below]
+  smallDefault --> ortho
+  enableFloat --> ortho
+  mutex --> ortho
+  fullDefault --> ortho
+```
+
 | Profile | Define | Typical size | Features |
 |---------|--------|--------------|----------|
 | **tiny** | `POLYTEST_PROFILE_TINY` | ~1–3 KB text | Text output only; no tags; no suite/group fixtures; no float; no longjmp |
@@ -42,6 +64,10 @@ Or `include(cmake/PolyTest.cmake)` after setting `POLYTEST_PROFILE`.
 | `POLYTEST_USE_HEAP` | Enable `polytest_register_heap_case` |
 | `POLYTEST_USE_SECTION_REGISTRY` | Place cases in `.polytest_info` |
 | `POLYTEST_FREESTANDING` | No stdio; set writer yourself |
+
+!!! tip "Freestanding"
+    On bare metal, call `polytest_set_writer` before `polytest_run_*` so events
+    reach your UART / semihosting sink.
 
 ## Mutex hooks (full)
 
@@ -83,5 +109,5 @@ registration:
 
 ## Size table (reference)
 
-See [examples/profile_sizes/README.md](../examples/profile_sizes/README.md) for
-measured QEMU/host sizes after a local build.
+See [`examples/profile_sizes/README.md`](https://github.com/malto101/Open-PolyTest-Framework/blob/main/examples/profile_sizes/README.md)
+for measured QEMU/host sizes after a local build.

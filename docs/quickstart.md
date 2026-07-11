@@ -1,60 +1,108 @@
 # Quickstart
 
-## Hobby / MCU (no CLI)
+Three common paths. Pick a tab and follow the commands.
 
-1. `python3 scripts/amalgamate.py`
-2. Copy `dist/polytest.h` and `dist/polytest.c` into your project
-3. `#define POLYTEST_PROFILE_TINY` (or `SMALL` / `FULL`) and optionally `POLYTEST_MINIMAL_PRINT`
-4. Write `TEST` / `ASSERT_*` cases and call `polytest_run_all()` (or `polytest_run_from_env()` on host)
-5. Read PASS/FAIL on serial or stdout
+=== "Hobby / MCU"
 
-See [profiles.md](profiles.md) for size trade-offs.
+    No CLI required — amalgamate, drop in two files, compile with your toolchain.
 
-### Parameterized cases (small/full)
+    1. Generate the amalgam:
 
-```c
-typedef struct { int a, b, sum; } row_t;
-static const row_t k_rows[] = {
-    {1, 1, 2},
-    {2, 3, 5},
-};
+        ```bash
+        python3 scripts/amalgamate.py
+        ```
 
-PARAM_TEST(Math, Basic, AddTable, row_t, k_rows) {
-    const row_t row = PARAM_AS(row_t);
-    ASSERT_EQ(row.sum, row.a + row.b);
-}
-```
+    2. Copy `dist/polytest.h` and `dist/polytest.c` into your project.
 
-Failures append `[param=<index>]`. Inside a normal `TEST`, `FOR_EACH(type, var, array)` also sets the param cursor.
+    3. Define a profile (and optional text-only path):
 
-## Host + CLI
+        ```c
+        #define POLYTEST_PROFILE_TINY
+        #define POLYTEST_MINIMAL_PRINT
+        #include "polytest.h"
 
-```bash
-cmake -S examples/host_c -B build/host_c -DPOLYTEST_MINIMAL_PRINT=OFF -DPOLYTEST_PROFILE=full
-cmake --build build/host_c
-cargo run -p open-polytest -- run --target host --config examples/host_c/polytest.toml
-```
+        TEST(Math, Basic, Add) { ASSERT_EQ(4, 2 + 2); }
 
-Produces `report.xml` and `report.json` plus a console summary.
+        int main(void) { return polytest_run_all(); }
+        ```
 
-Filter by tag (host):
+    4. Compile `polytest.c` with your Makefile/CMake and read PASS/FAIL on
+       serial or stdout.
 
-```bash
-cargo run -p open-polytest -- run --target host \
-  --config examples/host_c/polytest.toml --tag smoke
-```
+    See [Profiles](profiles.md) for size trade-offs and freestanding writer hooks.
 
-Tiny host smoke:
+    ### Parameterized cases (small/full)
 
-```bash
-cmake -S examples/host_c -B build/host_tiny -DPOLYTEST_PROFILE=tiny -DPOLYTEST_MINIMAL_PRINT=ON
-cmake --build build/host_tiny && ./build/host_tiny/host_c_tests
-```
+    ```c
+    typedef struct { int a, b, sum; } row_t;
+    static const row_t k_rows[] = {
+        {1, 1, 2},
+        {2, 3, 5},
+    };
+
+    PARAM_TEST(Math, Basic, AddTable, row_t, k_rows) {
+        const row_t row = PARAM_AS(row_t);
+        ASSERT_EQ(row.sum, row.a + row.b);
+    }
+    ```
+
+    Failures append `[param=<index>]`. Inside a normal `TEST`,
+    `FOR_EACH(type, var, array)` also sets the param cursor.
+
+=== "Host + CLI"
+
+    Structured COBS stream into console, JUnit, and JSON reporters.
+
+    ```bash
+    cmake -S examples/host_c -B build/host_c \
+      -DPOLYTEST_MINIMAL_PRINT=OFF -DPOLYTEST_PROFILE=full
+    cmake --build build/host_c
+    cargo run -p open-polytest -- run --target host \
+      --config examples/host_c/polytest.toml
+    ```
+
+    Produces `report.xml` and `report.json` plus a console summary.
+
+    Filter by tag (host only):
+
+    ```bash
+    cargo run -p open-polytest -- run --target host \
+      --config examples/host_c/polytest.toml --tag smoke
+    ```
+
+    Tiny host smoke (no CLI):
+
+    ```bash
+    cmake -S examples/host_c -B build/host_tiny \
+      -DPOLYTEST_PROFILE=tiny -DPOLYTEST_MINIMAL_PRINT=ON
+    cmake --build build/host_tiny && ./build/host_tiny/host_c_tests
+    ```
+
+    Full filter and toml reference: [CLI](cli.md).
+
+=== "QEMU Cortex-M33"
+
+    On-target smoke under `mps2-an505` with semihosting stream.
+
+    ```bash
+    # Needs arm-none-eabi-gcc + qemu-system-arm
+    cargo run -p open-polytest -- run --target qemu_m33 \
+      --config examples/qemu_m33_smoke/polytest.toml
+    ```
+
+    Build with `-DPOLYTEST_PROFILE=tiny` or `small` to compare firmware size.
+
+    !!! warning "Filters on QEMU"
+        Freestanding QEMU builds have no `getenv`. CLI `--tag` / `--suite` /
+        `--group` are rejected for `qemu_m33`. Hard-code `polytest_run_tag` or
+        `polytest_run_suite` in the example `main` if you need a subset.
+
+    Typical loop: edit → fast host check → QEMU in CI → (later) desk hardware.
 
 ## C++ / Rust
 
-- C++: [cpp.md](cpp.md) — `examples/host_cpp`
-- Rust: [rust.md](rust.md) — `examples/host_rust`
+- C++: [C++ adapter](cpp.md) — `examples/host_cpp`
+- Rust: [Rust adapter](rust.md) — `examples/host_rust`
 
 ## Mocking (FFF)
 
@@ -63,16 +111,9 @@ cmake -S examples/host_fff -B build/host_fff
 cmake --build build/host_fff && ./build/host_fff/host_fff_tests
 ```
 
-See [mocking.md](mocking.md).
+See [Mocking](mocking.md).
 
-## QEMU Cortex-M33
+## Next
 
-```bash
-cargo run -p open-polytest -- run --target qemu_m33 \
-  --config examples/qemu_m33_smoke/polytest.toml
-```
-
-Requires `arm-none-eabi-gcc` and `qemu-system-arm`. Build with
-`-DPOLYTEST_PROFILE=tiny` or `small` to compare firmware size.
-
-Typical loop: edit → fast host check → QEMU in CI → (later) desk hardware.
+- [Concepts](concepts.md) — which path and how lifecycle/CI fit together
+- [Architecture](architecture.md) — diagrams of host vs DUT
