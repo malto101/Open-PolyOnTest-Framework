@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{# Define window.mermaid before Material's bundle runs. Material otherwise
+   fetches unpkg.com/mermaid@11 when it sees <pre class="mermaid">; if that
+   request fails, diagrams stay as raw code fences. #}
+{% block libs %}
+  {{ super() }}
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11.6.0/dist/mermaid.min.js"></script>
+{% endblock %}
