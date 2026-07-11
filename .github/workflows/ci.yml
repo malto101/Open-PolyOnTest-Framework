@@ -1,0 +1,73 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  host:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Amalgamate
+        run: python3 scripts/amalgamate.py
+      - name: Build CLI
+        run: cargo build -p open-polytest
+      - name: Test Rust workspace
+        run: cargo test --workspace
+      - name: Configure host C (text)
+        run: cmake -S examples/host_c -B build/host_c_text -DPOLYTEST_MINIMAL_PRINT=ON -DPOLYTEST_PROFILE=full
+      - name: Build host C (text)
+        run: cmake --build build/host_c_text
+      - name: Run host C (text)
+        run: ./build/host_c_text/host_c_tests
+      - name: Configure host C (tiny)
+        run: cmake -S examples/host_c -B build/host_tiny -DPOLYTEST_PROFILE=tiny -DPOLYTEST_MINIMAL_PRINT=ON
+      - name: Build host C (tiny)
+        run: cmake --build build/host_tiny
+      - name: Run host C (tiny)
+        run: ./build/host_tiny/host_c_tests
+      - name: Configure host FFF
+        run: cmake -S examples/host_fff -B build/host_fff
+      - name: Build host FFF
+        run: cmake --build build/host_fff
+      - name: Run host FFF
+        run: ./build/host_fff/host_fff_tests
+      - name: Configure host C (COBS)
+        run: cmake -S examples/host_c -B build/host_c -DPOLYTEST_MINIMAL_PRINT=OFF -DPOLYTEST_PROFILE=full
+      - name: Build host C (COBS)
+        run: cmake --build build/host_c
+      - name: Run via polytest CLI
+        run: cargo run -p open-polytest -- run --target host --config examples/host_c/polytest.toml
+      - name: Upload reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reports
+          path: |
+            report.xml
+            report.json
+
+  qemu-m33:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          # build-essential provides make, required by CMake's Unix Makefiles generator
+          sudo apt-get install -y gcc-arm-none-eabi qemu-system-arm cmake build-essential
+      - name: Build CLI
+        run: cargo build -p open-polytest
+      - name: Build and run QEMU M33 smoke
+        run: cargo run -p open-polytest -- run --target qemu_m33 --config examples/qemu_m33_smoke/polytest.toml
+      - name: Upload QEMU reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: qemu-reports
+          path: |
+            report.xml
+            report.json

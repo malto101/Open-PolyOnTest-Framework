@@ -1,0 +1,12 @@
+/target/
+/build/
+/report.xml
+/report.json
+.DS_Store
+*.o
+*.elf
+*.d
+.idea/
+.vscode/
+__pycache__/
+site/

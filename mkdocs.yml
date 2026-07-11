@@ -1,0 +1,14 @@
+site_name: PolyTest
+site_description: Embedded-first multi-language test framework
+docs_dir: docs
+repo_url: https://github.com/malto101/Open-PolyTest-Framework
+theme:
+  name: material
+nav:
+  - Home: index.md
+  - Architecture: architecture.md
+  - Quickstart: quickstart.md
+  - Profiles: profiles.md
+  - Mocking: mocking.md
+  - Plugins: plugins.md
+  - Rust: rust.md

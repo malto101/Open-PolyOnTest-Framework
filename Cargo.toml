@@ -1,0 +1,28 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/polytest-plugin-api",
+    "crates/polytest-protocol",
+    "crates/polytest-builtins",
+    "crates/polytest-cli",
+    "crates/polytest-rs",
+]
+default-members = ["crates/polytest-cli"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+repository = "https://github.com/malto101/Open-PolyTest-Framework"
+authors = ["Dhruv Menon"]
+
+[workspace.dependencies]
+polytest-plugin-api = { path = "crates/polytest-plugin-api" }
+polytest-protocol = { path = "crates/polytest-protocol" }
+polytest-builtins = { path = "crates/polytest-builtins" }
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+thiserror = "1"
