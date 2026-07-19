@@ -1,11 +1,11 @@
 /**
- * PolyOnTest Core — assertion implementations
+ * POT Core — assertion implementations
  * Copyright 2026 Dhruv Menon
  * SPDX-License-Identifier: Apache-2.0
  */
-#include "polyontest/polyontest.h"
+#include "polytest/polytest.h"
 
-#ifdef POLYONTEST_FREESTANDING
+#ifdef POT_FREESTANDING
 size_t strlen(const char *s);
 int strcmp(const char *a, const char *b);
 int strncmp(const char *a, const char *b, size_t n);
@@ -104,10 +104,10 @@ static void pt_as_fail_msg(const char *file, int line, const char *base,
         at = pt_as_append_str(buf, sizeof(buf), at, extra);
     }
     (void)at;
-    polyontest_fail_at(file, line, buf);
+    pot_fail_at(file, line, buf);
 }
 
-void polyontest_assert_true(int cond, const char *expr, const char *msg,
+void pot_assert_true(int cond, const char *expr, const char *msg,
                           const char *file, int line) {
     if (cond) {
         return;
@@ -122,7 +122,7 @@ void polyontest_assert_true(int cond, const char *expr, const char *msg,
     }
 }
 
-void polyontest_assert_false(int cond, const char *expr, const char *msg,
+void pot_assert_false(int cond, const char *expr, const char *msg,
                            const char *file, int line) {
     if (!cond) {
         return;
@@ -137,7 +137,7 @@ void polyontest_assert_false(int cond, const char *expr, const char *msg,
     }
 }
 
-void polyontest_assert_null(const void *ptr, const char *msg, const char *file,
+void pot_assert_null(const void *ptr, const char *msg, const char *file,
                           int line) {
     if (ptr == NULL) {
         return;
@@ -145,7 +145,7 @@ void polyontest_assert_null(const void *ptr, const char *msg, const char *file,
     pt_as_fail_msg(file, line, "Expected NULL", msg);
 }
 
-void polyontest_assert_not_null(const void *ptr, const char *msg, const char *file,
+void pot_assert_not_null(const void *ptr, const char *msg, const char *file,
                               int line) {
     if (ptr != NULL) {
         return;
@@ -153,7 +153,7 @@ void polyontest_assert_not_null(const void *ptr, const char *msg, const char *fi
     pt_as_fail_msg(file, line, "Expected Not-NULL", msg);
 }
 
-void polyontest_assert_int(int64_t expected, int64_t actual, int size, int is_hex,
+void pot_assert_int(int64_t expected, int64_t actual, int size, int is_hex,
                          const char *msg, const char *file, int line) {
     (void)size;
     if (expected == actual) {
@@ -181,7 +181,7 @@ void polyontest_assert_int(int64_t expected, int64_t actual, int size, int is_he
     }
 }
 
-void polyontest_assert_uint(uint64_t expected, uint64_t actual, int size,
+void pot_assert_uint(uint64_t expected, uint64_t actual, int size,
                           int is_hex, const char *msg, const char *file,
                           int line) {
     if (expected == actual) {
@@ -209,7 +209,7 @@ void polyontest_assert_uint(uint64_t expected, uint64_t actual, int size,
     }
 }
 
-void polyontest_assert_not_equal_int(int64_t expected, int64_t actual,
+void pot_assert_not_equal_int(int64_t expected, int64_t actual,
                                    const char *msg, const char *file, int line) {
     if (expected != actual) {
         return;
@@ -224,7 +224,7 @@ void polyontest_assert_not_equal_int(int64_t expected, int64_t actual,
     }
 }
 
-void polyontest_assert_greater_than(int64_t threshold, int64_t actual,
+void pot_assert_greater_than(int64_t threshold, int64_t actual,
                                   const char *msg, const char *file, int line) {
     if (actual > threshold) {
         return;
@@ -241,7 +241,7 @@ void polyontest_assert_greater_than(int64_t threshold, int64_t actual,
     }
 }
 
-void polyontest_assert_less_than(int64_t threshold, int64_t actual,
+void pot_assert_less_than(int64_t threshold, int64_t actual,
                                const char *msg, const char *file, int line) {
     if (actual < threshold) {
         return;
@@ -258,7 +258,7 @@ void polyontest_assert_less_than(int64_t threshold, int64_t actual,
     }
 }
 
-void polyontest_assert_int_within(int64_t delta, int64_t expected, int64_t actual,
+void pot_assert_int_within(int64_t delta, int64_t expected, int64_t actual,
                                 const char *msg, const char *file, int line) {
     int64_t diff = (actual > expected) ? (actual - expected) : (expected - actual);
     if (diff <= delta) {
@@ -278,8 +278,8 @@ void polyontest_assert_int_within(int64_t delta, int64_t expected, int64_t actua
     }
 }
 
-#ifndef POLYONTEST_EXCLUDE_FLOAT
-void polyontest_assert_float_within(float delta, float expected, float actual,
+#ifndef POT_EXCLUDE_FLOAT
+void pot_assert_float_within(float delta, float expected, float actual,
                                   const char *msg, const char *file, int line) {
     float diff = (actual > expected) ? (actual - expected) : (expected - actual);
     if (diff <= delta) {
@@ -288,7 +288,7 @@ void polyontest_assert_float_within(float delta, float expected, float actual,
     pt_as_fail_msg(file, line, "Float value not within delta", msg);
 }
 
-void polyontest_assert_double_within(double delta, double expected, double actual,
+void pot_assert_double_within(double delta, double expected, double actual,
                                    const char *msg, const char *file, int line) {
     double diff =
         (actual > expected) ? (actual - expected) : (expected - actual);
@@ -299,8 +299,8 @@ void polyontest_assert_double_within(double delta, double expected, double actua
 }
 #endif
 
-#if POLYONTEST_CFG_HAS_EXTENDED_ASSERTS
-void polyontest_assert_string(const char *expected, const char *actual,
+#if POT_CFG_HAS_EXTENDED_ASSERTS
+void pot_assert_string(const char *expected, const char *actual,
                             const char *msg, const char *file, int line) {
     if (expected == actual) {
         return;
@@ -321,7 +321,7 @@ void polyontest_assert_string(const char *expected, const char *actual,
     }
 }
 
-void polyontest_assert_string_len(const char *expected, const char *actual,
+void pot_assert_string_len(const char *expected, const char *actual,
                                 size_t len, const char *msg, const char *file,
                                 int line) {
     if (expected == actual) {
@@ -333,7 +333,7 @@ void polyontest_assert_string_len(const char *expected, const char *actual,
     pt_as_fail_msg(file, line, "String length compare failed", msg);
 }
 
-void polyontest_assert_memory(const void *expected, const void *actual, size_t len,
+void pot_assert_memory(const void *expected, const void *actual, size_t len,
                             const char *msg, const char *file, int line) {
     if (len == 0) {
         return;
@@ -347,7 +347,7 @@ void polyontest_assert_memory(const void *expected, const void *actual, size_t l
     pt_as_fail_msg(file, line, "Memory compare failed", msg);
 }
 
-void polyontest_assert_int_array(const int *expected, const int *actual,
+void pot_assert_int_array(const int *expected, const int *actual,
                                size_t num, const char *msg, const char *file,
                                int line) {
     size_t i;
@@ -372,7 +372,7 @@ void polyontest_assert_int_array(const int *expected, const int *actual,
     }
 }
 
-void polyontest_assert_uint8_array(const uint8_t *expected, const uint8_t *actual,
+void pot_assert_uint8_array(const uint8_t *expected, const uint8_t *actual,
                                  size_t num, const char *msg, const char *file,
                                  int line) {
     size_t i;
@@ -397,7 +397,7 @@ void polyontest_assert_uint8_array(const uint8_t *expected, const uint8_t *actua
     }
 }
 
-void polyontest_assert_bits(uint32_t mask, uint32_t expected, uint32_t actual,
+void pot_assert_bits(uint32_t mask, uint32_t expected, uint32_t actual,
                           const char *msg, const char *file, int line) {
     if ((mask & expected) == (mask & actual)) {
         return;
@@ -414,7 +414,7 @@ void polyontest_assert_bits(uint32_t mask, uint32_t expected, uint32_t actual,
     }
 }
 
-void polyontest_assert_bits_high(uint32_t mask, uint32_t actual, const char *msg,
+void pot_assert_bits_high(uint32_t mask, uint32_t actual, const char *msg,
                                const char *file, int line) {
     if ((mask & actual) == mask) {
         return;
@@ -422,11 +422,11 @@ void polyontest_assert_bits_high(uint32_t mask, uint32_t actual, const char *msg
     pt_as_fail_msg(file, line, "Expected bits high", msg);
 }
 
-void polyontest_assert_bits_low(uint32_t mask, uint32_t actual, const char *msg,
+void pot_assert_bits_low(uint32_t mask, uint32_t actual, const char *msg,
                               const char *file, int line) {
     if ((mask & actual) == 0u) {
         return;
     }
     pt_as_fail_msg(file, line, "Expected bits low", msg);
 }
-#endif /* POLYONTEST_CFG_HAS_EXTENDED_ASSERTS */
+#endif /* POT_CFG_HAS_EXTENDED_ASSERTS */

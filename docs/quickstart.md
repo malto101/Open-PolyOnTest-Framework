@@ -4,30 +4,27 @@ Three common paths. Pick a tab and follow the commands.
 
 === "Hobby / MCU"
 
-    No CLI required — amalgamate, drop in two files, compile with your toolchain.
+    No CLI required — copy the 4 harness files into your project.
 
-    1. Generate the amalgam:
+    1. Copy the core files from this repository:
+       - Header: `harness/include/polytest/polytest.h`
+       - Profile header: `harness/include/polyontest/polytest_profile.h`
+       - Source: `harness/c/pot_core.c`
+       - Source: `harness/c/pot_assert.c`
 
-        ```bash
-        python3 scripts/amalgamate.py
-        ```
-
-    2. Copy `dist/polyontest.h` and `dist/polyontest.c` into your project.
-
-    3. Define a profile (and optional text-only path):
+    2. Define a profile (and optional text-only path) and include the header (ensure the header directory is in your include path):
 
         ```c
-        #define POLYONTEST_PROFILE_TINY
-        #define POLYONTEST_MINIMAL_PRINT
+        #define POT_PROFILE_TINY
+        #define POT_MINIMAL_PRINT
         #include "polyontest.h"
 
         TEST(Math, Basic, Add) { ASSERT_EQ(4, 2 + 2); }
 
-        int main(void) { return polyontest_run_all(); }
+        int main(void) { return pot_run_all(); }
         ```
 
-    4. Compile `polyontest.c` with your Makefile/CMake and read PASS/FAIL on
-       serial or stdout.
+    3. Compile `pot_core.c` and `pot_assert.c` with your Makefile/CMake and read PASS/FAIL on serial or stdout.
 
     See [Profiles](profiles.md) for size trade-offs and freestanding writer hooks.
 
@@ -55,7 +52,7 @@ Three common paths. Pick a tab and follow the commands.
 
     ```bash
     cmake -S examples/host_c -B build/host_c \
-      -DPOLYONTEST_MINIMAL_PRINT=OFF -DPOLYONTEST_PROFILE=full
+      -DPOT_MINIMAL_PRINT=OFF -DPOT_PROFILE=full
     cmake --build build/host_c
     cargo run -p polyontest -- run --target host \
       --config examples/host_c/polyontest.toml
@@ -74,7 +71,7 @@ Three common paths. Pick a tab and follow the commands.
 
     ```bash
     cmake -S examples/host_c -B build/host_tiny \
-      -DPOLYONTEST_PROFILE=tiny -DPOLYONTEST_MINIMAL_PRINT=ON
+      -DPOT_PROFILE=tiny -DPOT_MINIMAL_PRINT=ON
     cmake --build build/host_tiny && ./build/host_tiny/host_c_tests
     ```
 
@@ -90,12 +87,12 @@ Three common paths. Pick a tab and follow the commands.
       --config examples/qemu_m33_smoke/polyontest.toml
     ```
 
-    Build with `-DPOLYONTEST_PROFILE=tiny` or `small` to compare firmware size.
+    Build with `-DPOT_PROFILE=tiny` or `small` to compare firmware size.
 
     !!! warning "Filters on QEMU"
         Freestanding QEMU builds have no `getenv`. CLI `--tag` / `--suite` /
-        `--group` are rejected for `qemu_m33`. Hard-code `polyontest_run_tag` or
-        `polyontest_run_suite` in the example `main` if you need a subset.
+        `--group` are rejected for `qemu_m33`. Hard-code `pot_run_tag` or
+        `pot_run_suite` in the example `main` if you need a subset.
 
     Typical loop: edit → fast host check → QEMU in CI → (later) desk hardware.
 

@@ -30,8 +30,8 @@ flowchart TD
   qemuOrHw -->|Yes| qemuPath[qemu_m33 board + COBS stream]
   qemuOrHw -->|Desk hardware later| hwNote[Same writer hook; board plugin v2+]
   hostPath --> filters{Need tag filters?}
-  filters -->|Yes| fromEnv[polyontest_run_from_env + CLI flags]
-  filters -->|No| runAll[polyontest_run_all]
+  filters -->|Yes| fromEnv[pot_run_from_env + CLI flags]
+  filters -->|No| runAll[pot_run_all]
   hobby --> profiles[See Profiles]
   qemuPath --> profiles
   fromEnv --> plugins[See CLI and Plugins]
@@ -45,7 +45,7 @@ flowchart TD
 | QEMU on-target | [Quickstart](quickstart.md) (QEMU tab) · [example README](https://github.com/malto101/Open-PolyTest-Framework/blob/main/examples/qemu_m33_smoke/README.md) |
 | Language adapters | [C++](cpp.md) · [Rust](rust.md) |
 
-## Amalgamate vs modular CMake
+## Manual Drop-in vs modular CMake
 
 Two ways to consume the C harness:
 
@@ -55,33 +55,27 @@ flowchart LR
     hdr["harness/include/polyontest/*.h"]
     src["harness/c/*.c"]
   end
-  subgraph amalgamPath [Hobby / third-party MCU]
-    script["scripts/amalgamate.py"]
-    dist["dist/polyontest.h + polyontest.c"]
+  subgraph dropinPath [Hobby / third-party MCU]
+    copy["Manual copy/paste"]
     userMake[Your Makefile or CMake]
   end
   subgraph modularPath [In-tree examples / CI]
     cmake["cmake/PolyOnTest.cmake"]
-    lib[polyontest_core static lib]
+    lib[pot_core static lib]
     examples[examples/*/]
   end
-  hdr --> script
-  src --> script
-  script --> dist
-  dist --> userMake
+  hdr --> copy
+  src --> copy
+  copy --> userMake
   hdr --> cmake
   src --> cmake
   cmake --> lib
   lib --> examples
 ```
 
-- **Amalgam** — copy two files; no PolyOnTest build system on the DUT.
-- **Modular** — link `polyontest_core` via `PolyOnTest.cmake` when developing inside
+- **Manual Drop-in** — copy the 4 harness files; no PolyOnTest build system on the DUT.
+- **Modular** — link `pot_core` via `PolyOnTest.cmake` when developing inside
   this repo or mirroring the example layout.
-
-!!! tip "Generated files"
-    `dist/*` is produced by amalgamate and marked do-not-edit. Change
-    `harness/` sources, then re-run `python3 scripts/amalgamate.py`.
 
 ## Test lifecycle
 
@@ -94,7 +88,7 @@ flowchart TD
   main --> entry{Runner entry}
   entry -->|run_all| all[match all]
   entry -->|run_tag / suite / group| filt[match filter]
-  entry -->|run_from_env| env[POLYONTEST_TAG / SUITE / GROUP]
+  entry -->|run_from_env| env[POT_TAG / SUITE / GROUP]
   all --> loop
   filt --> loop
   env --> loop
@@ -120,15 +114,14 @@ flowchart TD
 
 ## CI matrix
 
-Upstream CI (`.github/workflows/ci.yml`) mirrors the two main integration
+Upstream CI (`.github/workflows/ci.yml`) mirrors the main integration
 paths:
 
 ```mermaid
 flowchart TD
   push[Push / PR] --> hostJob[Job: host]
   push --> qemuJob[Job: qemu-m33]
-  hostJob --> amalg[amalgamate.py]
-  amalg --> cargo[cargo build / test]
+  hostJob --> cargo[cargo build / test]
   cargo --> hostC[host_c text / tiny / COBS+CLI]
   hostC --> fff[host_fff]
   fff --> cpp[host_cpp]

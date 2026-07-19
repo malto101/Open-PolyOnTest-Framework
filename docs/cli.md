@@ -36,9 +36,9 @@ polyontest run --target <name> --config path/to/polyontest.toml \
 |------|---------|
 | `--target` | Key under `[target.<name>]` in the toml (default `host`) |
 | `--config` | Path to `polyontest.toml` |
-| `--tag` | Host only — sets `POLYONTEST_TAG` for the DUT |
-| `--suite` | Host only — sets `POLYONTEST_SUITE` |
-| `--group` | Host only — sets `POLYONTEST_GROUP` (requires `--suite`) |
+| `--tag` | Host only — sets `POT_TAG` for the DUT |
+| `--suite` | Host only — sets `POT_SUITE` |
+| `--group` | Host only — sets `POT_GROUP` (requires `--suite`) |
 
 CLI filter flags **override** matching keys in the toml.
 
@@ -79,9 +79,9 @@ timeout_ms = 10000
 
 | Board | Execution filter |
 |-------|------------------|
-| `host` | Env vars → DUT `polyontest_run_from_env()` |
-| `qemu_m33` | **Not supported** — freestanding has no `getenv`. CLI errors if filters are set. Hard-code `polyontest_run_tag` / `run_suite` in the QEMU `main` if needed. |
+| `host` | Env vars → DUT `pot_run_from_env()` |
+| `qemu_m33` | **Not supported** — freestanding has no `getenv`. CLI errors if filters are set. Hard-code `pot_run_tag` / `run_suite` in the QEMU `main` if needed. |
 
-DUT binaries should call `polyontest_run_from_env()` (or the C++/Rust wrappers) so filters take effect.
+DUT binaries should call `pot_run_from_env()` (or the C++/Rust wrappers) so filters take effect.
 
 See also [Tags](tags.md).

@@ -4,7 +4,7 @@ The [`polyontest-rs`](https://github.com/malto101/Open-PolyTest-Framework/tree/m
 crate is a thin FFI-facing adapter. Default is `#![no_std]`; enable the `std`
 feature for host helpers.
 
-A `#[polyontest::test]` proc-macro is **future work** and not required for v1 —
+A `#[polytest::test]` proc-macro is **future work** and not required for v1 —
 register cases from C (`TEST` macros) and drive the runner from Rust.
 
 ## Host example
@@ -15,7 +15,7 @@ compiles the C harness + a small `tests.c` via `build.rs`, then calls
 
 !!! note "Linker anchors"
     On macOS/ELF linkers, constructor registration in a static archive can be
-    dead-stripped; the example calls `polyontest_host_rust_link_anchor()` so
+    dead-stripped; the example calls `pot_host_rust_link_anchor()` so
     `tests.c` stays in the final binary.
 
 ```bash
@@ -23,7 +23,7 @@ compiles the C harness + a small `tests.c` via `build.rs`, then calls
 cargo run -p polyontest-host-rust
 
 # Tag filter
-POLYONTEST_TAG=unit cargo run -p polyontest-host-rust
+POT_TAG=unit cargo run -p polyontest-host-rust
 
 # COBS + CLI
 cargo build -p polyontest-host-rust --no-default-features --features cobs
@@ -34,7 +34,7 @@ cargo run -p polyontest -- run --target host \
 ## API (`std` feature)
 
 ```rust
-use polyontest_rs::std_support;
+use pot_rs::std_support;
 
 std_support::run_all();
 std_support::run_tag("smoke");
@@ -43,7 +43,7 @@ std_support::run_group("RustHost", "Basic");
 std_support::run_from_env();
 ```
 
-FFI symbols live under `polyontest_rs::ffi` (also usable from `no_std`).
+FFI symbols live under `pot_rs::ffi` (also usable from `no_std`).
 
 ## Features
 

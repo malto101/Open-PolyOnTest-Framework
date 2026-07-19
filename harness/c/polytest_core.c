@@ -1,17 +1,17 @@
 /**
- * PolyOnTest Core — runner, emit, protect/ignore, registration
+ * POT Core — runner, emit, protect/ignore, registration
  * Copyright 2026 Dhruv Menon
  * SPDX-License-Identifier: Apache-2.0
  *
- * Define POLYONTEST_FREESTANDING for no-stdlib builds (must call polyontest_set_writer).
+ * Define POT_FREESTANDING for no-stdlib builds (must call pot_set_writer).
  */
-#include "polyontest/polyontest.h"
+#include "polytest/polytest.h"
 
-#if defined(POLYONTEST_FREESTANDING)
+#if defined(POT_FREESTANDING)
 void *memcpy(void *dst, const void *src, size_t n);
 size_t strlen(const char *s);
 int strcmp(const char *a, const char *b);
-#elif !defined(POLYONTEST_NO_LONGJMP)
+#elif !defined(POT_NO_LONGJMP)
 #include <setjmp.h>
 #include <stdio.h>
 #include <string.h>
@@ -20,7 +20,7 @@ int strcmp(const char *a, const char *b);
 #include <string.h>
 #endif
 
-#if POLYONTEST_CFG_HAS_HEAP || !defined(POLYONTEST_FREESTANDING)
+#if POT_CFG_HAS_HEAP || !defined(POT_FREESTANDING)
 #include <stdlib.h>
 #endif
 
@@ -37,12 +37,12 @@ enum {
     PT_STATUS_SKIPPED = 2
 };
 
-static polyontest_case_t *g_tests;
-#if POLYONTEST_CFG_HAS_FIXTURES
-static polyontest_suite_t *g_suites;
-static polyontest_group_t *g_groups;
+static pot_case_t *g_tests;
+#if POT_CFG_HAS_FIXTURES
+static pot_suite_t *g_suites;
+static pot_group_t *g_groups;
 #endif
-static polyontest_write_fn_t g_write;
+static pot_write_fn_t g_write;
 static void *g_write_user;
 static int g_current_failed;
 static int g_current_skipped;
@@ -59,15 +59,15 @@ static size_t g_param_index;
 static const char *g_filter_group;
 static const char *g_filter_case;
 
-#if POLYONTEST_CFG_HAS_MUTEX
-static polyontest_lock_fn_t g_lock;
-static polyontest_lock_fn_t g_unlock;
+#if POT_CFG_HAS_MUTEX
+static pot_lock_fn_t g_lock;
+static pot_lock_fn_t g_unlock;
 static void *g_lock_user;
 #endif
 
-#if POLYONTEST_CFG_HAS_PROTECT
+#if POT_CFG_HAS_PROTECT
 static int g_protect_active;
-#ifdef POLYONTEST_FREESTANDING
+#ifdef POT_FREESTANDING
 static void *g_jmp_buf[32];
 #else
 static jmp_buf g_jmp_buf;
@@ -76,7 +76,7 @@ static jmp_buf g_jmp_buf;
 
 static void default_write(const void *data, size_t len, void *user) {
     (void)user;
-#ifdef POLYONTEST_FREESTANDING
+#ifdef POT_FREESTANDING
     (void)data;
     (void)len;
 #else
@@ -85,13 +85,13 @@ static void default_write(const void *data, size_t len, void *user) {
 #endif
 }
 
-void polyontest_set_writer(polyontest_write_fn_t fn, void *user) {
+void pot_set_writer(pot_write_fn_t fn, void *user) {
     g_write = fn;
     g_write_user = user;
 }
 
-#if POLYONTEST_CFG_HAS_MUTEX
-void polyontest_set_locks(polyontest_lock_fn_t lock, polyontest_lock_fn_t unlock,
+#if POT_CFG_HAS_MUTEX
+void pot_set_locks(pot_lock_fn_t lock, pot_lock_fn_t unlock,
                         void *user) {
     g_lock = lock;
     g_unlock = unlock;
@@ -114,8 +114,8 @@ static void pt_lock(void) {}
 static void pt_unlock(void) {}
 #endif
 
-static int already_linked_case(polyontest_case_t *test_case) {
-    for (polyontest_case_t *t = g_tests; t; t = t->next) {
+static int already_linked_case(pot_case_t *test_case) {
+    for (pot_case_t *t = g_tests; t; t = t->next) {
         if (t == test_case) {
             return 1;
         }
@@ -123,9 +123,9 @@ static int already_linked_case(polyontest_case_t *test_case) {
     return 0;
 }
 
-#if POLYONTEST_CFG_HAS_FIXTURES
-static int already_linked_suite(polyontest_suite_t *suite) {
-    for (polyontest_suite_t *s = g_suites; s; s = s->next) {
+#if POT_CFG_HAS_FIXTURES
+static int already_linked_suite(pot_suite_t *suite) {
+    for (pot_suite_t *s = g_suites; s; s = s->next) {
         if (s == suite) {
             return 1;
         }
@@ -133,8 +133,8 @@ static int already_linked_suite(polyontest_suite_t *suite) {
     return 0;
 }
 
-static int already_linked_group(polyontest_group_t *group) {
-    for (polyontest_group_t *g = g_groups; g; g = g->next) {
+static int already_linked_group(pot_group_t *group) {
+    for (pot_group_t *g = g_groups; g; g = g->next) {
         if (g == group) {
             return 1;
         }
@@ -142,7 +142,7 @@ static int already_linked_group(polyontest_group_t *group) {
     return 0;
 }
 
-void polyontest_register_suite(polyontest_suite_t *suite) {
+void pot_register_suite(pot_suite_t *suite) {
     if (!suite || already_linked_suite(suite)) {
         return;
     }
@@ -150,7 +150,7 @@ void polyontest_register_suite(polyontest_suite_t *suite) {
     g_suites = suite;
 }
 
-void polyontest_register_group(polyontest_group_t *group) {
+void pot_register_group(pot_group_t *group) {
     if (!group || already_linked_group(group)) {
         return;
     }
@@ -158,11 +158,11 @@ void polyontest_register_group(polyontest_group_t *group) {
     g_groups = group;
 }
 #else
-void polyontest_register_suite(polyontest_suite_t *suite) { (void)suite; }
-void polyontest_register_group(polyontest_group_t *group) { (void)group; }
+void pot_register_suite(pot_suite_t *suite) { (void)suite; }
+void pot_register_group(pot_group_t *group) { (void)group; }
 #endif
 
-void polyontest_register(polyontest_case_t *test_case) {
+void pot_register(pot_case_t *test_case) {
     if (!test_case || already_linked_case(test_case)) {
         return;
     }
@@ -170,10 +170,10 @@ void polyontest_register(polyontest_case_t *test_case) {
     g_tests = test_case;
 }
 
-#if POLYONTEST_CFG_HAS_HEAP
-int polyontest_register_heap_case(const char *suite, const char *group,
-                                const char *name, polyontest_fn_t fn) {
-    polyontest_case_t *c = (polyontest_case_t *)malloc(sizeof(polyontest_case_t));
+#if POT_CFG_HAS_HEAP
+int pot_register_heap_case(const char *suite, const char *group,
+                                const char *name, pot_fn_t fn) {
+    pot_case_t *c = (pot_case_t *)malloc(sizeof(pot_case_t));
     if (!c) {
         return -1;
     }
@@ -183,35 +183,35 @@ int polyontest_register_heap_case(const char *suite, const char *group,
     c->fn = fn;
     c->tags = NULL;
     c->next = NULL;
-    polyontest_register(c);
+    pot_register(c);
     return 0;
 }
 #endif
 
-#ifdef POLYONTEST_USE_SECTION_REGISTRY
+#ifdef POT_USE_SECTION_REGISTRY
 #if (defined(__GNUC__) || defined(__clang__)) && !defined(__APPLE__)
-/* GNU ld: PROVIDE(__start_polyontest_info) / __stop_polyontest_info around
- * KEEP(*(.polyontest_info)) — see docs/profiles.md. */
-extern polyontest_case_t __start_polyontest_info[];
-extern polyontest_case_t __stop_polyontest_info[];
+/* GNU ld: PROVIDE(__start_pot_info) / __stop_pot_info around
+ * KEEP(*(.pot_info)) — see docs/profiles.md. */
+extern pot_case_t __start_pot_info[];
+extern pot_case_t __stop_pot_info[];
 
-static void polyontest_collect_section_cases(void) {
-    polyontest_case_t *p;
-    for (p = __start_polyontest_info; p < __stop_polyontest_info; ++p) {
-        polyontest_register(p);
+static void pot_collect_section_cases(void) {
+    pot_case_t *p;
+    for (p = __start_pot_info; p < __stop_pot_info; ++p) {
+        pot_register(p);
     }
 }
 #else
-static void polyontest_collect_section_cases(void) {
+static void pot_collect_section_cases(void) {
     /* Apple / non-GNU: use ctor registration or a custom section walker. */
 }
 #endif
 #else
-static void polyontest_collect_section_cases(void) {}
+static void pot_collect_section_cases(void) {}
 #endif
 
 static void emit_raw(const void *data, size_t len) {
-    polyontest_write_fn_t w = g_write ? g_write : default_write;
+    pot_write_fn_t w = g_write ? g_write : default_write;
     pt_lock();
     w(data, len, g_write_user);
     pt_unlock();
@@ -270,7 +270,7 @@ static void format_case_leaf(char *dst, size_t cap, const char *group,
     (void)at;
 }
 
-#if !POLYONTEST_CFG_HAS_COBS || defined(POLYONTEST_MINIMAL_PRINT)
+#if !POT_CFG_HAS_COBS || defined(POT_MINIMAL_PRINT)
 
 static size_t append_case_id(char *dst, size_t cap, size_t at) {
     at = append_str(dst, cap, at, g_cur_suite ? g_cur_suite : "?");
@@ -296,7 +296,7 @@ static void emit_case_result(const char *status) {
     emit_line(buf);
 }
 
-#define POLYONTEST_EMIT_TEXT 1
+#define POT_EMIT_TEXT 1
 
 #else /* COBS PTWP */
 
@@ -398,25 +398,25 @@ static void emit_msg(uint8_t type, const char *a, const char *b, const char *c,
     emit_frame(buf, at);
 }
 
-#define POLYONTEST_EMIT_TEXT 0
+#define POT_EMIT_TEXT 0
 
 #endif /* COBS */
 
-void polyontest_set_param(size_t index, const void *param) {
+void pot_set_param(size_t index, const void *param) {
     g_param_index = index;
     g_param = param;
     g_param_active = 1;
 }
 
-void polyontest_clear_param(void) {
+void pot_clear_param(void) {
     g_param = NULL;
     g_param_active = 0;
     g_param_index = 0;
 }
 
-size_t polyontest_param_index(void) { return g_param_index; }
+size_t pot_param_index(void) { return g_param_index; }
 
-const void *polyontest_current_param(void) { return g_param; }
+const void *pot_current_param(void) { return g_param; }
 
 static const char *message_with_param(const char *message, char *buf,
                                       size_t cap) {
@@ -433,13 +433,13 @@ static const char *message_with_param(const char *message, char *buf,
     return buf;
 }
 
-void polyontest_fail_at(const char *file, int line, const char *message) {
+void pot_fail_at(const char *file, int line, const char *message) {
     char param_msg[192];
     const char *msg = message_with_param(message, param_msg, sizeof(param_msg));
     pt_lock();
     g_current_failed = 1;
     pt_unlock();
-#if POLYONTEST_EMIT_TEXT
+#if POT_EMIT_TEXT
     char buf[320];
     size_t at = 0;
     at = append_str(buf, sizeof(buf), at, "FAIL ");
@@ -460,16 +460,16 @@ void polyontest_fail_at(const char *file, int line, const char *message) {
 #endif
 }
 
-void polyontest_fail(const char *message, const char *file, int line) {
-    polyontest_fail_at(file, line, message ? message : "fail");
+void pot_fail(const char *message, const char *file, int line) {
+    pot_fail_at(file, line, message ? message : "fail");
 }
 
-void polyontest_ignore(const char *message) {
+void pot_ignore(const char *message) {
     pt_lock();
     g_current_skipped = 1;
     pt_unlock();
     if (message && message[0]) {
-#if POLYONTEST_EMIT_TEXT
+#if POT_EMIT_TEXT
         char buf[256];
         size_t at = 0;
         at = append_str(buf, sizeof(buf), at, "IGNORE ");
@@ -484,10 +484,10 @@ void polyontest_ignore(const char *message) {
     }
 }
 
-int polyontest_protect(void) {
-#if !POLYONTEST_CFG_HAS_PROTECT
+int pot_protect(void) {
+#if !POT_CFG_HAS_PROTECT
     return 1;
-#elif defined(POLYONTEST_FREESTANDING)
+#elif defined(POT_FREESTANDING)
     g_protect_active = 1;
     if (__builtin_setjmp(g_jmp_buf) == 0) {
         return 1;
@@ -504,13 +504,13 @@ int polyontest_protect(void) {
 #endif
 }
 
-void polyontest_abort(void) {
+void pot_abort(void) {
     pt_lock();
     g_current_failed = 1;
     pt_unlock();
-#if !POLYONTEST_CFG_HAS_PROTECT
+#if !POT_CFG_HAS_PROTECT
     return;
-#elif defined(POLYONTEST_FREESTANDING)
+#elif defined(POT_FREESTANDING)
     if (g_protect_active) {
         __builtin_longjmp(g_jmp_buf, 1);
     }
@@ -534,7 +534,7 @@ static int str_cmp(const char *a, const char *b) {
     return strcmp(a, b);
 }
 
-static int case_cmp(const polyontest_case_t *a, const polyontest_case_t *b) {
+static int case_cmp(const pot_case_t *a, const pot_case_t *b) {
     int c = str_cmp(a->suite, b->suite);
     if (c != 0) {
         return c;
@@ -546,15 +546,15 @@ static int case_cmp(const polyontest_case_t *a, const polyontest_case_t *b) {
     return str_cmp(a->name, b->name);
 }
 
-static polyontest_case_t *sort_cases(polyontest_case_t *head) {
-    polyontest_case_t *sorted = NULL;
+static pot_case_t *sort_cases(pot_case_t *head) {
+    pot_case_t *sorted = NULL;
     while (head) {
-        polyontest_case_t *n = head->next;
+        pot_case_t *n = head->next;
         if (!sorted || case_cmp(head, sorted) < 0) {
             head->next = sorted;
             sorted = head;
         } else {
-            polyontest_case_t *s = sorted;
+            pot_case_t *s = sorted;
             while (s->next && case_cmp(head, s->next) >= 0) {
                 s = s->next;
             }
@@ -566,9 +566,9 @@ static polyontest_case_t *sort_cases(polyontest_case_t *head) {
     return sorted;
 }
 
-#if POLYONTEST_CFG_HAS_FIXTURES
-static polyontest_suite_t *find_suite(const char *name) {
-    for (polyontest_suite_t *s = g_suites; s; s = s->next) {
+#if POT_CFG_HAS_FIXTURES
+static pot_suite_t *find_suite(const char *name) {
+    for (pot_suite_t *s = g_suites; s; s = s->next) {
         if (str_cmp(s->name, name) == 0) {
             return s;
         }
@@ -576,8 +576,8 @@ static polyontest_suite_t *find_suite(const char *name) {
     return NULL;
 }
 
-static polyontest_group_t *find_group(const char *suite, const char *group) {
-    for (polyontest_group_t *g = g_groups; g; g = g->next) {
+static pot_group_t *find_group(const char *suite, const char *group) {
+    for (pot_group_t *g = g_groups; g; g = g->next) {
         if (str_cmp(g->suite, suite) == 0 && str_cmp(g->name, group) == 0) {
             return g;
         }
@@ -586,7 +586,7 @@ static polyontest_group_t *find_group(const char *suite, const char *group) {
 }
 #endif
 
-#if POLYONTEST_CFG_HAS_TAGS
+#if POT_CFG_HAS_TAGS
 static int tags_contain(const char *const *tags, const char *tag) {
     if (!tags || !tag) {
         return 0;
@@ -599,19 +599,19 @@ static int tags_contain(const char *const *tags, const char *tag) {
     return 0;
 }
 
-static int case_matches_tag(const polyontest_case_t *t, const char *tag) {
+static int case_matches_tag(const pot_case_t *t, const char *tag) {
     if (tags_contain(t->tags, tag)) {
         return 1;
     }
-#if POLYONTEST_CFG_HAS_FIXTURES
+#if POT_CFG_HAS_FIXTURES
     {
-        polyontest_suite_t *s = find_suite(t->suite);
+        pot_suite_t *s = find_suite(t->suite);
         if (s && tags_contain(s->tags, tag)) {
             return 1;
         }
     }
     {
-        polyontest_group_t *g = find_group(t->suite, t->group);
+        pot_group_t *g = find_group(t->suite, t->group);
         if (g && tags_contain(g->tags, tag)) {
             return 1;
         }
@@ -626,15 +626,15 @@ static void close_suite(const char *open_suite, unsigned suite_passed,
     if (!open_suite) {
         return;
     }
-#if POLYONTEST_CFG_HAS_FIXTURES
+#if POT_CFG_HAS_FIXTURES
     {
-        polyontest_suite_t *s = find_suite(open_suite);
+        pot_suite_t *s = find_suite(open_suite);
         if (s && s->teardown) {
             s->teardown();
         }
     }
 #endif
-#if POLYONTEST_EMIT_TEXT
+#if POT_EMIT_TEXT
     {
         char buf[160];
         size_t at = 0;
@@ -656,13 +656,13 @@ static void close_suite(const char *open_suite, unsigned suite_passed,
 }
 
 static void open_suite_emit(const char *name) {
-#if POLYONTEST_CFG_HAS_FIXTURES
-    polyontest_suite_t *s = find_suite(name);
+#if POT_CFG_HAS_FIXTURES
+    pot_suite_t *s = find_suite(name);
     if (s && s->setup) {
         s->setup();
     }
 #endif
-#if POLYONTEST_EMIT_TEXT
+#if POT_EMIT_TEXT
     {
         char buf[128];
         size_t at = 0;
@@ -676,21 +676,21 @@ static void open_suite_emit(const char *name) {
 #endif
 }
 
-static int run_filtered(int (*match)(const polyontest_case_t *, const char *),
+static int run_filtered(int (*match)(const pot_case_t *, const char *),
                         const char *tag) {
-    polyontest_collect_section_cases();
-    polyontest_case_t *list = sort_cases(g_tests);
+    pot_collect_section_cases();
+    pot_case_t *list = sort_cases(g_tests);
     g_tests = list;
     g_passed = g_failed = g_skipped = 0;
 
     const char *open_suite = NULL;
     unsigned suite_passed = 0, suite_failed = 0, suite_skipped = 0;
 
-#if POLYONTEST_EMIT_TEXT
-    emit_line("=== PolyOnTest ===");
+#if POT_EMIT_TEXT
+    emit_line("=== POT ===");
 #endif
 
-    for (polyontest_case_t *t = list; t; t = t->next) {
+    for (pot_case_t *t = list; t; t = t->next) {
         if (match && !match(t, tag)) {
             continue;
         }
@@ -711,7 +711,7 @@ static int run_filtered(int (*match)(const polyontest_case_t *, const char *),
         {
             char leaf[128];
             format_case_leaf(leaf, sizeof(leaf), t->group, t->name);
-#if POLYONTEST_EMIT_TEXT
+#if POT_EMIT_TEXT
             {
                 char buf[192];
                 size_t at = 0;
@@ -727,8 +727,8 @@ static int run_filtered(int (*match)(const polyontest_case_t *, const char *),
         }
 
         {
-#if POLYONTEST_CFG_HAS_FIXTURES
-            polyontest_group_t *g = find_group(t->suite, t->group);
+#if POT_CFG_HAS_FIXTURES
+            pot_group_t *g = find_group(t->suite, t->group);
             if (g && g->setup) {
                 g->setup();
             }
@@ -748,7 +748,7 @@ static int run_filtered(int (*match)(const polyontest_case_t *, const char *),
         if (g_current_skipped) {
             g_skipped++;
             suite_skipped++;
-#if POLYONTEST_EMIT_TEXT
+#if POT_EMIT_TEXT
             emit_case_result("SKIP");
 #else
             {
@@ -761,7 +761,7 @@ static int run_filtered(int (*match)(const polyontest_case_t *, const char *),
         } else if (g_current_failed) {
             g_failed++;
             suite_failed++;
-#if POLYONTEST_EMIT_TEXT
+#if POT_EMIT_TEXT
             emit_case_result("FAIL");
 #else
             {
@@ -774,7 +774,7 @@ static int run_filtered(int (*match)(const polyontest_case_t *, const char *),
         } else {
             g_passed++;
             suite_passed++;
-#if POLYONTEST_EMIT_TEXT
+#if POT_EMIT_TEXT
             emit_case_result("PASS");
 #else
             {
@@ -789,7 +789,7 @@ static int run_filtered(int (*match)(const polyontest_case_t *, const char *),
 
     close_suite(open_suite, suite_passed, suite_failed, suite_skipped);
 
-#if POLYONTEST_EMIT_TEXT
+#if POT_EMIT_TEXT
     {
         char buf[160];
         size_t at = 0;
@@ -809,90 +809,84 @@ static int run_filtered(int (*match)(const polyontest_case_t *, const char *),
     return g_failed ? 1 : 0;
 }
 
-static int match_all(const polyontest_case_t *t, const char *tag) {
+static int match_all(const pot_case_t *t, const char *tag) {
     (void)t;
     (void)tag;
     return 1;
 }
 
-static int match_suite(const polyontest_case_t *t, const char *suite) {
+static int match_suite(const pot_case_t *t, const char *suite) {
     return suite && str_cmp(t->suite, suite) == 0;
 }
 
-static int match_group(const polyontest_case_t *t, const char *suite) {
+static int match_group(const pot_case_t *t, const char *suite) {
     return suite && g_filter_group && str_cmp(t->suite, suite) == 0 &&
            str_cmp(t->group, g_filter_group) == 0;
 }
 
-static int match_case(const polyontest_case_t *t, const char *suite) {
+static int match_case(const pot_case_t *t, const char *suite) {
     return suite && g_filter_group && g_filter_case &&
            str_cmp(t->suite, suite) == 0 &&
            str_cmp(t->group, g_filter_group) == 0 &&
            str_cmp(t->name, g_filter_case) == 0;
 }
 
-#if POLYONTEST_CFG_HAS_TAGS
-static int match_tag(const polyontest_case_t *t, const char *tag) {
+#if POT_CFG_HAS_TAGS
+static int match_tag(const pot_case_t *t, const char *tag) {
     return case_matches_tag(t, tag);
 }
 #endif
 
-int polyontest_run_all(void) { return run_filtered(match_all, NULL); }
+int pot_run_all(void) { return run_filtered(match_all, NULL); }
 
-int polyontest_run_tag(const char *tag) {
-#if POLYONTEST_CFG_HAS_TAGS
+int pot_run_tag(const char *tag) {
+#if POT_CFG_HAS_TAGS
     if (!tag) {
-        return polyontest_run_all();
+        return pot_run_all();
     }
     return run_filtered(match_tag, tag);
 #else
     (void)tag;
-    return polyontest_run_all();
+    return pot_run_all();
 #endif
 }
 
-int polyontest_run_suite(const char *suite) {
+int pot_run_suite(const char *suite) {
     if (!suite || !suite[0]) {
-        return polyontest_run_all();
+        return pot_run_all();
     }
     return run_filtered(match_suite, suite);
 }
 
-int polyontest_run_group(const char *suite, const char *group) {
+int pot_run_group(const char *suite, const char *group) {
     if (!suite || !suite[0] || !group || !group[0]) {
-        return polyontest_run_all();
+        return pot_run_all();
     }
     g_filter_group = group;
     return run_filtered(match_group, suite);
 }
 
-int polyontest_run_case(const char *suite, const char *group, const char *case_name) {
+int pot_run_case(const char *suite, const char *group, const char *case_name) {
     if (!suite || !suite[0] || !group || !group[0] || !case_name || !case_name[0]) {
-        return polyontest_run_all();
+        return pot_run_all();
     }
     g_filter_group = group;
     g_filter_case = case_name;
     return run_filtered(match_case, suite);
 }
 
-int polyontest_run_from_env(void) {
-#if defined(POLYONTEST_FREESTANDING)
-    return polyontest_run_all();
+int pot_run_from_env(void) {
+#if defined(POT_FREESTANDING)
+    return pot_run_all();
 #else
-    if (getenv("POLY_DISCOVER")) {
-        polyontest_collect_section_cases();
-        polyontest_case_t *list = sort_cases(g_tests);
-        const char *tag = getenv("POLYONTEST_TAG");
-        const char *suite = getenv("POLY_SUITE");
-        if (!suite || !suite[0]) {
-            suite = getenv("POLYONTEST_SUITE");
-        }
-        const char *group = getenv("POLY_GROUP");
-        if (!group || !group[0]) {
-            group = getenv("POLYONTEST_GROUP");
-        }
-        for (polyontest_case_t *t = list; t; t = t->next) {
-#if POLYONTEST_CFG_HAS_TAGS
+    if (getenv("POT_DISCOVER")) {
+        pot_collect_section_cases();
+        pot_case_t *list = sort_cases(g_tests);
+        const char *tag = getenv("POT_TAG");
+        const char *suite = getenv("POT_SUITE");
+        const char *group = getenv("POT_GROUP");
+        for (pot_case_t *t = list; t; t = t->next) {
+#if POT_CFG_HAS_TAGS
             if (tag && tag[0] && !case_matches_tag(t, tag)) {
                 continue;
             }
@@ -918,29 +912,23 @@ int polyontest_run_from_env(void) {
         exit(0);
     }
 
-    const char *tag = getenv("POLYONTEST_TAG");
-    const char *suite = getenv("POLY_SUITE");
-    if (!suite || !suite[0]) {
-        suite = getenv("POLYONTEST_SUITE");
-    }
-    const char *group = getenv("POLY_GROUP");
-    if (!group || !group[0]) {
-        group = getenv("POLYONTEST_GROUP");
-    }
-    const char *case_name = getenv("POLY_CASE");
+    const char *tag = getenv("POT_TAG");
+    const char *suite = getenv("POT_SUITE");
+    const char *group = getenv("POT_GROUP");
+    const char *case_name = getenv("POT_CASE");
 
     if (suite && suite[0] && group && group[0] && case_name && case_name[0]) {
-        return polyontest_run_case(suite, group, case_name);
+        return pot_run_case(suite, group, case_name);
     }
     if (tag && tag[0]) {
-        return polyontest_run_tag(tag);
+        return pot_run_tag(tag);
     }
     if (suite && suite[0] && group && group[0]) {
-        return polyontest_run_group(suite, group);
+        return pot_run_group(suite, group);
     }
     if (suite && suite[0]) {
-        return polyontest_run_suite(suite);
+        return pot_run_suite(suite);
     }
-    return polyontest_run_all();
+    return pot_run_all();
 #endif
 }

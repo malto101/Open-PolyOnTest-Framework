@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 #include "board_uart.h"
-#include "polyontest/polyontest.h"
+#include "polytest/polytest.h"
 
 #include <stdint.h>
 
@@ -31,8 +31,8 @@ TEST(QemuM33, Core, NotNull) {
 
 int main(void) {
     board_uart_init();
-    polyontest_set_writer(uart_writer, 0);
-    int rc = polyontest_run_all();
+    pot_set_writer(uart_writer, 0);
+    int rc = pot_run_all();
     board_qemu_exit(rc);
     return rc;
 }

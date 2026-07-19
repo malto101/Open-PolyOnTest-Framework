@@ -1,4 +1,4 @@
-#include "polyontest.hpp"
+#include "polytest.hpp"
 
 #include <cstdio>
 
@@ -14,7 +14,7 @@ TEST(CppSugar, Smoke, Equals) { ASSERT_EQ(4, 2 + 2); }
 
 TEST_TAGS(CppSugar, Smoke, Tagged, "cpp", "unit") { ASSERT_EQ(3, 1 + 2); }
 
-#if POLYONTEST_CFG_HAS_FIXTURES
+#if POT_CFG_HAS_FIXTURES
 PARAM_TEST(CppSugar, Smoke, AddTable, AddRow, k_rows) {
   const AddRow row = PARAM_AS(AddRow);
   ASSERT_EQ(row.sum, row.a + row.b);
@@ -23,5 +23,5 @@ PARAM_TEST(CppSugar, Smoke, AddTable, AddRow, k_rows) {
 
 int main() {
   std::printf("polyontest C++ adapter smoke\n");
-  return polyontest::run_from_env();
+  return polytest::run_from_env();
 }

@@ -63,7 +63,7 @@ fn build_harness_binaries() {
             .arg(&source_dir)
             .arg("-B")
             .arg(&build_dir)
-            .arg("-DPOLYONTEST_MINIMAL_PRINT=OFF");
+            .arg("-DPOT_MINIMAL_PRINT=OFF");
         let status = configure.status().expect("failed to run cmake configure");
         assert!(status.success(), "cmake configuration failed");
 
@@ -108,7 +108,7 @@ fn decode_stdout_to_events(stdout: &[u8]) -> Vec<polyontest_protocol::Event> {
 #[test]
 fn test_c_harness_discovery() {
     let mut cmd = Command::new(get_harness_binary_path());
-    cmd.env("POLY_DISCOVER", "1");
+    cmd.env("POT_DISCOVER", "1");
     let output = cmd.output().expect("failed to execute C harness tests");
     let stdout = String::from_utf8(output.stdout).unwrap();
     
@@ -126,9 +126,9 @@ fn test_c_harness_discovery() {
 #[test]
 fn test_c_harness_case_filtering() {
     let mut cmd = Command::new(get_harness_binary_path());
-    cmd.env("POLY_SUITE", "Math");
-    cmd.env("POLY_GROUP", "Basic");
-    cmd.env("POLY_CASE", "AddPositive");
+    cmd.env("POT_SUITE", "Math");
+    cmd.env("POT_GROUP", "Basic");
+    cmd.env("POT_CASE", "AddPositive");
     let output = cmd.output().expect("failed to execute C harness tests");
     
     assert!(output.status.success(), "expected exit status 0, got {:?}", output.status);

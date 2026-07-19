@@ -7,21 +7,24 @@ libraries (C / C++ / Rust) without locking you into Zephyr or Pigweed.
 ## Thirty-second taste
 
 ```bash
-python3 scripts/amalgamate.py
-# copy dist/polyontest.h dist/polyontest.c into your project
+# Copy the harness files into your project:
+# - harness/include/polytest/polytest.h
+# - harness/include/polytest/polytest_profile.h
+# - harness/c/polytest_core.c
+# - harness/c/polytest_assert.c
 ```
 
 ```c
-#define POLYONTEST_PROFILE_TINY
-#define POLYONTEST_MINIMAL_PRINT
-#include "polyontest.h"
+#define POT_PROFILE_TINY
+#define POT_MINIMAL_PRINT
+#include "polytest/polytest.h" // Ensure headers are in your include path
 
 TEST(Math, Basic, Add) { ASSERT_EQ(4, 2 + 2); }
 
-int main(void) { return polyontest_run_all(); }
+int main(void) { return pot_run_all(); }
 ```
 
-Compile `polyontest.c` with your existing Makefile/CMake — no PolyOnTest build system required.
+Compile `polytest_core.c` and `polytest_assert.c` with your existing Makefile/CMake.
 
 ## Documentation
 

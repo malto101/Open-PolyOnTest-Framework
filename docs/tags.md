@@ -5,8 +5,8 @@
 Tags attach at suite, group, or case level (small/full profiles):
 
 ```c
-POLYONTEST_SUITE_TAGS(Math, "host", "smoke");
-POLYONTEST_GROUP_TAGS(Math, Basic, "unit");
+POT_SUITE_TAGS(Math, "host", "smoke");
+POT_GROUP_TAGS(Math, Basic, "unit");
 TEST_TAGS(Math, Basic, SkipMe, "skipdemo") { IGNORE(); }
 ```
 
@@ -14,7 +14,7 @@ A case matches a tag filter if **any** of its own tags, its group tags, or its
 suite tags contain the requested string.
 
 !!! warning "Profile gated"
-    Tags require `POLYONTEST_CFG_HAS_TAGS` (small/full). The tiny profile has no
+    Tags require `POT_CFG_HAS_TAGS` (small/full). The tiny profile has no
     tag filtering — use separate binaries or hard-coded runner entry points.
 
 ## Running a subset
@@ -22,24 +22,24 @@ suite tags contain the requested string.
 ### In-process
 
 ```c
-polyontest_run_tag("smoke");
-polyontest_run_suite("Math");
-polyontest_run_group("Math", "Basic");
-polyontest_run_from_env();  // preferred for host binaries
+pot_run_tag("smoke");
+pot_run_suite("Math");
+pot_run_group("Math", "Basic");
+pot_run_from_env();  // preferred for host binaries
 ```
 
 ### Environment (host)
 
 | Variable | Effect |
 |----------|--------|
-| `POLYONTEST_TAG` | `polyontest_run_tag` |
-| `POLYONTEST_SUITE` + `POLYONTEST_GROUP` | `polyontest_run_group` |
-| `POLYONTEST_SUITE` alone | `polyontest_run_suite` |
+| `POT_TAG` | `pot_run_tag` |
+| `POT_SUITE` + `POT_GROUP` | `pot_run_group` |
+| `POT_SUITE` alone | `pot_run_suite` |
 
 Priority: tag → suite+group → suite → all.
 
 ```bash
-POLYONTEST_TAG=unit ./build/host_c/host_c_tests
+POT_TAG=unit ./build/host_c/host_c_tests
 ```
 
 ### CLI

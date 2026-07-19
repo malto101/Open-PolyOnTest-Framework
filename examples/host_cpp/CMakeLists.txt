@@ -1,38 +1,38 @@
 cmake_minimum_required(VERSION 3.20)
-project(polyontest_host_cpp LANGUAGES C CXX)
+project(pot_host_cpp LANGUAGES C CXX)
 
-set(POLYONTEST_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../..")
+set(POT_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../..")
 
 add_executable(host_cpp_tests
   main.cpp
-  ${POLYONTEST_ROOT}/harness/c/polyontest_core.c
-  ${POLYONTEST_ROOT}/harness/c/polyontest_assert.c
+  ${POT_ROOT}/harness/c/pot_core.c
+  ${POT_ROOT}/harness/c/pot_assert.c
 )
 
 target_include_directories(host_cpp_tests PRIVATE
-  ${POLYONTEST_ROOT}/harness/include
-  ${POLYONTEST_ROOT}/harness/cpp
+  ${POT_ROOT}/harness/include
+  ${POT_ROOT}/harness/cpp
 )
 
-set(POLYONTEST_PROFILE "full" CACHE STRING "PolyOnTest size profile: tiny|small|full")
-set_property(CACHE POLYONTEST_PROFILE PROPERTY STRINGS tiny small full)
+set(POT_PROFILE "full" CACHE STRING "PolyOnTest size profile: tiny|small|full")
+set_property(CACHE POT_PROFILE PROPERTY STRINGS tiny small full)
 
-if(POLYONTEST_PROFILE STREQUAL "tiny")
-  target_compile_definitions(host_cpp_tests PRIVATE POLYONTEST_PROFILE_TINY)
-elseif(POLYONTEST_PROFILE STREQUAL "small")
-  target_compile_definitions(host_cpp_tests PRIVATE POLYONTEST_PROFILE_SMALL)
+if(POT_PROFILE STREQUAL "tiny")
+  target_compile_definitions(host_cpp_tests PRIVATE POT_PROFILE_TINY)
+elseif(POT_PROFILE STREQUAL "small")
+  target_compile_definitions(host_cpp_tests PRIVATE POT_PROFILE_SMALL)
 else()
-  target_compile_definitions(host_cpp_tests PRIVATE POLYONTEST_PROFILE_FULL)
+  target_compile_definitions(host_cpp_tests PRIVATE POT_PROFILE_FULL)
 endif()
 
-option(POLYONTEST_MINIMAL_PRINT "Human-readable output" ON)
-if(POLYONTEST_MINIMAL_PRINT OR POLYONTEST_PROFILE STREQUAL "tiny")
-  target_compile_definitions(host_cpp_tests PRIVATE POLYONTEST_MINIMAL_PRINT)
+option(POT_MINIMAL_PRINT "Human-readable output" ON)
+if(POT_MINIMAL_PRINT OR POT_PROFILE STREQUAL "tiny")
+  target_compile_definitions(host_cpp_tests PRIVATE POT_MINIMAL_PRINT)
 endif()
 
 target_compile_features(host_cpp_tests PRIVATE cxx_std_17 c_std_11)
 set_source_files_properties(
-  ${POLYONTEST_ROOT}/harness/c/polyontest_core.c
-  ${POLYONTEST_ROOT}/harness/c/polyontest_assert.c
+  ${POT_ROOT}/harness/c/pot_core.c
+  ${POT_ROOT}/harness/c/pot_assert.c
   PROPERTIES LANGUAGE C
 )

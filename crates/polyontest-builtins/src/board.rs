@@ -40,13 +40,13 @@ impl HostBoard {
             .stdout(Stdio::piped())
             .stderr(Stdio::inherit());
         if let Some(tag) = &self.filter.tag {
-            cmd.env("POLYONTEST_TAG", tag);
+            cmd.env("POT_TAG", tag);
         }
         if let Some(suite) = &self.filter.suite {
-            cmd.env("POLYONTEST_SUITE", suite);
+            cmd.env("POT_SUITE", suite);
         }
         if let Some(group) = &self.filter.group {
-            cmd.env("POLYONTEST_GROUP", group);
+            cmd.env("POT_GROUP", group);
         }
         let child = cmd.spawn()?;
         ChildStdioTransport::from_child(child)

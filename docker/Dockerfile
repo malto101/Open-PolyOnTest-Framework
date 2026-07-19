@@ -11,8 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /src
 COPY . .
-RUN python3 scripts/amalgamate.py \
- && cargo build -p polyontest \
+RUN cargo build -p polyontest \
  && cmake -S examples/host_c -B build/host_c -DPOLYONTEST_MINIMAL_PRINT=OFF \
  && cmake --build build/host_c
 

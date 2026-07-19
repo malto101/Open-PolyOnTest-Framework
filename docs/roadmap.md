@@ -34,8 +34,8 @@ flowchart TB
 
 !!! note "Design rule"
     Future capabilities ship as **host plugins**, **ExtensionPacks**, or
-    **profile-gated harness hooks**. The amalgam core stays freestanding and
-    flash-budget honest — nothing here forces cost into `POLYONTEST_PROFILE_TINY`.
+    **profile-gated harness hooks**. The core harness stays freestanding and
+    flash-budget honest — nothing here forces cost into `POT_PROFILE_TINY`.
 
 Related today: [Architecture](architecture.md) · [Concepts](concepts.md) ·
 [Plugins](plugins.md).
@@ -81,7 +81,7 @@ thin C++ / Rust adapters.
 **Forward design**
 
 - Per-case fixtures (beyond suite/group) as optional macros on SMALL/FULL.
-- Rust `#[polyontest::test]` proc-macro as a first-class adapter, not only FFI.
+- Rust `#[polytest::test]` proc-macro as a first-class adapter, not only FFI.
 - Mocking stays an ExtensionPack path (`fff_fakes` today); codegen mocks later.
 
 ### On-target runtime and profiles
@@ -133,7 +133,7 @@ Plugin traits `Board` + `Transport`. Builtins: `host`, `qemu_m33` (logical
 
 ### Reporting and delivery
 
-Console, JUnit, JSON exporters; GitHub CI; amalgam + modular CMake.
+Console, JUnit, JSON exporters; GitHub CI; manual drop-in + modular CMake.
 
 **Forward design**
 
@@ -320,8 +320,8 @@ command/connectivity foundations — ahead of certification work.
     pull appears.
 
 Possible future artifacts (documentation-level reminder, not a backlog
-commitment): TQK evidence, frozen amalgam hashes, requirements↔test↔coverage
-traceability, MISRA guidance for amalgam consumers.
+commitment): TQK evidence, requirements↔test↔coverage
+traceability, MISRA guidance for framework consumers.
 
 ---
 
@@ -374,7 +374,7 @@ flowchart TB
 
 ```mermaid
 flowchart TD
-  hobby[Hobby TINY amalgam] --> stream[Stream + text or COBS]
+  hobby[Hobby TINY drop-in] --> stream[Stream + text or COBS]
   stream --> hostCi[Host CI filters JUnit]
   hostCi --> isolHost[Host isolation]
   isolHost --> cmd[Command mode]

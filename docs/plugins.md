@@ -61,7 +61,7 @@ imports a concrete UART or board.
 Sketch:
 
 ```rust
-use polyontest_plugin_api::{Board, PluginError, Result};
+use pot_plugin_api::{Board, PluginError, Result};
 
 pub struct MyBoard { /* … */ }
 
@@ -76,8 +76,8 @@ impl Board for MyBoard {
 
 The C harness does not dlopen. Board glue is compile-time:
 
-- `polyontest_set_writer` for the byte sink
-- Optional `polyontest_set_locks` (full profile)
+- `pot_set_writer` for the byte sink
+- Optional `pot_set_locks` (full profile)
 - Linker section / ctors for case discovery
 
 See [Architecture](architecture.md) and [Profiles](profiles.md).

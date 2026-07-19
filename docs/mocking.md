@@ -2,7 +2,7 @@
 
 PolyOnTest does not ship a Ruby/codegen mock generator. For C unit tests that need
 fakes, use the header-only helpers in
-[`plugins/extension/fff_fakes/polyontest_fff.h`](https://github.com/malto101/Open-PolyTest-Framework/blob/main/plugins/extension/fff_fakes/polyontest_fff.h).
+[`plugins/extension/fff_fakes/polytest_fff.h`](https://github.com/malto101/Open-PolyTest-Framework/blob/main/plugins/extension/fff_fakes/polytest_fff.h).
 
 ## vs CMock
 
@@ -20,15 +20,15 @@ plugin when the behavior under test *is* the peripheral.
 ## Quick pattern
 
 ```c
-#define POLYONTEST_MINIMAL_PRINT
-#include "polyontest/polyontest.h"
-#include "polyontest_fff.h"
+#define POT_MINIMAL_PRINT
+#include "polytest/polytest.h"
+#include "polytest_fff.h"
 #include "sensor.h"
 
-POLYONTEST_FAKE_VALUE_FUNC1(int32_t, sensor_read, int, -1)
+POT_FAKE_VALUE_FUNC1(int32_t, sensor_read, int, -1)
 
 TEST(Hal, Sensor, ReadOnce) {
-    POLYONTEST_FAKE_RESET_VALUE1(sensor_read, -1);
+    POT_FAKE_RESET_VALUE1(sensor_read, -1);
     sensor_read_return = 1200;
     ASSERT_EQ(1200, sensor_read(2));
     ASSERT_EQ(1, sensor_read_call_count);
@@ -38,12 +38,12 @@ TEST(Hal, Sensor, ReadOnce) {
 
 Macros:
 
-- `POLYONTEST_FAKE_VALUE_FUNC0/1/2`
-- `POLYONTEST_FAKE_VOID_FUNC0/1/2`
-- `POLYONTEST_FAKE_RESET` / `POLYONTEST_FAKE_RESET_VALUE1/2` / `POLYONTEST_FAKE_RESET_VOID1/2`
+- `POT_FAKE_VALUE_FUNC0/1/2`
+- `POT_FAKE_VOID_FUNC0/1/2`
+- `POT_FAKE_RESET` / `POT_FAKE_RESET_VALUE1/2` / `POT_FAKE_RESET_VOID1/2`
 - Optional `fn_name##_custom_fake` function pointer for a custom body
 
-Define `POLYONTEST_FFF_ALIASES` for short `FAKE_*` / `RESET_FAKE` names.
+Define `POT_FFF_ALIASES` for short `FAKE_*` / `RESET_FAKE` names.
 
 ## Example
 

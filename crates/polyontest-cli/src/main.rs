@@ -31,13 +31,13 @@ enum Commands {
         /// Config file
         #[arg(long, default_value = "polyontest.toml")]
         config: PathBuf,
-        /// Filter by tag (host only; sets POLYONTEST_TAG)
+        /// Filter by tag (host only; sets POT_TAG)
         #[arg(long)]
         tag: Option<String>,
-        /// Filter by suite name (host only; sets POLYONTEST_SUITE)
+        /// Filter by suite name (host only; sets POT_SUITE)
         #[arg(long)]
         suite: Option<String>,
-        /// Filter by group name; requires --suite (host only; sets POLYONTEST_GROUP)
+        /// Filter by group name; requires --suite (host only; sets POT_GROUP)
         #[arg(long)]
         group: Option<String>,
         /// Run each test case in a separate child process (host target only)
@@ -347,15 +347,15 @@ fn discover_cases(
         }
     }
     let mut cmd = std::process::Command::new(binary);
-    cmd.env("POLY_DISCOVER", "1");
+    cmd.env("POT_DISCOVER", "1");
     if let Some(tag) = &filter.tag {
-        cmd.env("POLYONTEST_TAG", tag);
+        cmd.env("POT_TAG", tag);
     }
     if let Some(suite) = &filter.suite {
-        cmd.env("POLY_SUITE", suite);
+        cmd.env("POT_SUITE", suite);
     }
     if let Some(group) = &filter.group {
-        cmd.env("POLY_GROUP", group);
+        cmd.env("POT_GROUP", group);
     }
     let output = cmd.output().with_context(|| format!("failed to run {}", binary.display()))?;
     if !output.status.success() {
@@ -396,9 +396,9 @@ fn run_isolated(
 
 
         let mut cmd = std::process::Command::new(binary);
-        cmd.env("POLY_SUITE", &c.suite);
-        cmd.env("POLY_GROUP", &c.group);
-        cmd.env("POLY_CASE", &c.name);
+        cmd.env("POT_SUITE", &c.suite);
+        cmd.env("POT_GROUP", &c.group);
+        cmd.env("POT_CASE", &c.name);
         cmd.stdin(std::process::Stdio::null())
            .stdout(std::process::Stdio::piped())
            .stderr(std::process::Stdio::inherit());
@@ -705,7 +705,7 @@ mod tests {
             .arg(&source_dir)
             .arg("-B")
             .arg(&build_dir)
-            .arg("-DPOLYONTEST_MINIMAL_PRINT=OFF");
+            .arg("-DPOT_MINIMAL_PRINT=OFF");
         let status = configure.status().expect("failed to run cmake configure");
         assert!(status.success(), "cmake configuration failed");
 

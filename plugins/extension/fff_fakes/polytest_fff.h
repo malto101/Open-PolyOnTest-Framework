@@ -9,15 +9,15 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#ifndef POLYONTEST_FFF_FAKES_H
-#define POLYONTEST_FFF_FAKES_H
+#ifndef POT_FFF_FAKES_H
+#define POT_FFF_FAKES_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#ifndef POLYONTEST_FFF_ARG_HISTORY_LEN
-#define POLYONTEST_FFF_ARG_HISTORY_LEN 10
+#ifndef POT_FFF_ARG_HISTORY_LEN
+#define POT_FFF_ARG_HISTORY_LEN 10
 #endif
 
 /* -------------------------------------------------------------------------- */
@@ -26,7 +26,7 @@ extern "C" {
 
 /* Fake *definitions* are non-static so they can satisfy a public HAL header. */
 
-#define POLYONTEST_FAKE_VALUE_FUNC0(ret_type, fn_name, default_ret)               \
+#define POT_FAKE_VALUE_FUNC0(ret_type, fn_name, default_ret)               \
     static ret_type fn_name##_return = (default_ret);                          \
     static int fn_name##_call_count;                                           \
     static ret_type (*fn_name##_custom_fake)(void);                            \
@@ -38,14 +38,14 @@ extern "C" {
         return fn_name##_return;                                               \
     }
 
-#define POLYONTEST_FAKE_VALUE_FUNC1(ret_type, fn_name, arg0_type, default_ret)   \
+#define POT_FAKE_VALUE_FUNC1(ret_type, fn_name, arg0_type, default_ret)   \
     static ret_type fn_name##_return = (default_ret);                          \
     static int fn_name##_call_count;                                           \
     static arg0_type fn_name##_arg0_val;                                       \
-    static arg0_type fn_name##_arg0_history[POLYONTEST_FFF_ARG_HISTORY_LEN];     \
+    static arg0_type fn_name##_arg0_history[POT_FFF_ARG_HISTORY_LEN];     \
     static ret_type (*fn_name##_custom_fake)(arg0_type);                       \
     ret_type fn_name(arg0_type a0) {                                           \
-        if (fn_name##_call_count < POLYONTEST_FFF_ARG_HISTORY_LEN) {             \
+        if (fn_name##_call_count < POT_FFF_ARG_HISTORY_LEN) {             \
             fn_name##_arg0_history[fn_name##_call_count] = a0;                 \
         }                                                                      \
         fn_name##_arg0_val = a0;                                               \
@@ -56,17 +56,17 @@ extern "C" {
         return fn_name##_return;                                               \
     }
 
-#define POLYONTEST_FAKE_VALUE_FUNC2(ret_type, fn_name, arg0_type, arg1_type,     \
+#define POT_FAKE_VALUE_FUNC2(ret_type, fn_name, arg0_type, arg1_type,     \
                                   default_ret)                                 \
     static ret_type fn_name##_return = (default_ret);                          \
     static int fn_name##_call_count;                                           \
     static arg0_type fn_name##_arg0_val;                                       \
     static arg1_type fn_name##_arg1_val;                                       \
-    static arg0_type fn_name##_arg0_history[POLYONTEST_FFF_ARG_HISTORY_LEN];     \
-    static arg1_type fn_name##_arg1_history[POLYONTEST_FFF_ARG_HISTORY_LEN];     \
+    static arg0_type fn_name##_arg0_history[POT_FFF_ARG_HISTORY_LEN];     \
+    static arg1_type fn_name##_arg1_history[POT_FFF_ARG_HISTORY_LEN];     \
     static ret_type (*fn_name##_custom_fake)(arg0_type, arg1_type);            \
     ret_type fn_name(arg0_type a0, arg1_type a1) {                             \
-        if (fn_name##_call_count < POLYONTEST_FFF_ARG_HISTORY_LEN) {             \
+        if (fn_name##_call_count < POT_FFF_ARG_HISTORY_LEN) {             \
             fn_name##_arg0_history[fn_name##_call_count] = a0;                 \
             fn_name##_arg1_history[fn_name##_call_count] = a1;                 \
         }                                                                      \
@@ -83,7 +83,7 @@ extern "C" {
 /* Void fakes                                                                 */
 /* -------------------------------------------------------------------------- */
 
-#define POLYONTEST_FAKE_VOID_FUNC0(fn_name)                                      \
+#define POT_FAKE_VOID_FUNC0(fn_name)                                      \
     static int fn_name##_call_count;                                           \
     static void (*fn_name##_custom_fake)(void);                                \
     void fn_name(void) {                                                       \
@@ -93,13 +93,13 @@ extern "C" {
         }                                                                      \
     }
 
-#define POLYONTEST_FAKE_VOID_FUNC1(fn_name, arg0_type)                           \
+#define POT_FAKE_VOID_FUNC1(fn_name, arg0_type)                           \
     static int fn_name##_call_count;                                           \
     static arg0_type fn_name##_arg0_val;                                       \
-    static arg0_type fn_name##_arg0_history[POLYONTEST_FFF_ARG_HISTORY_LEN];     \
+    static arg0_type fn_name##_arg0_history[POT_FFF_ARG_HISTORY_LEN];     \
     static void (*fn_name##_custom_fake)(arg0_type);                           \
     void fn_name(arg0_type a0) {                                               \
-        if (fn_name##_call_count < POLYONTEST_FFF_ARG_HISTORY_LEN) {             \
+        if (fn_name##_call_count < POT_FFF_ARG_HISTORY_LEN) {             \
             fn_name##_arg0_history[fn_name##_call_count] = a0;                 \
         }                                                                      \
         fn_name##_arg0_val = a0;                                               \
@@ -109,15 +109,15 @@ extern "C" {
         }                                                                      \
     }
 
-#define POLYONTEST_FAKE_VOID_FUNC2(fn_name, arg0_type, arg1_type)                \
+#define POT_FAKE_VOID_FUNC2(fn_name, arg0_type, arg1_type)                \
     static int fn_name##_call_count;                                           \
     static arg0_type fn_name##_arg0_val;                                       \
     static arg1_type fn_name##_arg1_val;                                       \
-    static arg0_type fn_name##_arg0_history[POLYONTEST_FFF_ARG_HISTORY_LEN];     \
-    static arg1_type fn_name##_arg1_history[POLYONTEST_FFF_ARG_HISTORY_LEN];     \
+    static arg0_type fn_name##_arg0_history[POT_FFF_ARG_HISTORY_LEN];     \
+    static arg1_type fn_name##_arg1_history[POT_FFF_ARG_HISTORY_LEN];     \
     static void (*fn_name##_custom_fake)(arg0_type, arg1_type);                \
     void fn_name(arg0_type a0, arg1_type a1) {                                 \
-        if (fn_name##_call_count < POLYONTEST_FFF_ARG_HISTORY_LEN) {             \
+        if (fn_name##_call_count < POT_FFF_ARG_HISTORY_LEN) {             \
             fn_name##_arg0_history[fn_name##_call_count] = a0;                 \
             fn_name##_arg1_history[fn_name##_call_count] = a1;                 \
         }                                                                      \
@@ -133,31 +133,31 @@ extern "C" {
 /* RESET — clear call count, last args, history, custom fake                  */
 /* -------------------------------------------------------------------------- */
 
-#define POLYONTEST_FAKE_RESET(fn_name)                                           \
+#define POT_FAKE_RESET(fn_name)                                           \
     do {                                                                       \
         fn_name##_call_count = 0;                                              \
         fn_name##_custom_fake = 0;                                             \
     } while (0)
 
 /** Reset value-returning fake + scalar arg0 history (zero-fill). */
-#define POLYONTEST_FAKE_RESET_VALUE1(fn_name, default_ret)                       \
+#define POT_FAKE_RESET_VALUE1(fn_name, default_ret)                       \
     do {                                                                       \
         unsigned _pt_i;                                                        \
-        POLYONTEST_FAKE_RESET(fn_name);                                          \
+        POT_FAKE_RESET(fn_name);                                          \
         fn_name##_return = (default_ret);                                      \
-        for (_pt_i = 0; _pt_i < POLYONTEST_FFF_ARG_HISTORY_LEN; ++_pt_i) {       \
+        for (_pt_i = 0; _pt_i < POT_FFF_ARG_HISTORY_LEN; ++_pt_i) {       \
             fn_name##_arg0_history[_pt_i] = 0;                                 \
         }                                                                      \
         fn_name##_arg0_val = 0;                                                \
     } while (0)
 
 /** Reset value-returning fake + scalar arg0/arg1 history (zero-fill). */
-#define POLYONTEST_FAKE_RESET_VALUE2(fn_name, default_ret)                       \
+#define POT_FAKE_RESET_VALUE2(fn_name, default_ret)                       \
     do {                                                                       \
         unsigned _pt_i;                                                        \
-        POLYONTEST_FAKE_RESET(fn_name);                                          \
+        POT_FAKE_RESET(fn_name);                                          \
         fn_name##_return = (default_ret);                                      \
-        for (_pt_i = 0; _pt_i < POLYONTEST_FFF_ARG_HISTORY_LEN; ++_pt_i) {       \
+        for (_pt_i = 0; _pt_i < POT_FFF_ARG_HISTORY_LEN; ++_pt_i) {       \
             fn_name##_arg0_history[_pt_i] = 0;                                 \
             fn_name##_arg1_history[_pt_i] = 0;                                 \
         }                                                                      \
@@ -165,21 +165,21 @@ extern "C" {
         fn_name##_arg1_val = 0;                                                \
     } while (0)
 
-#define POLYONTEST_FAKE_RESET_VOID1(fn_name)                                     \
+#define POT_FAKE_RESET_VOID1(fn_name)                                     \
     do {                                                                       \
         unsigned _pt_i;                                                        \
-        POLYONTEST_FAKE_RESET(fn_name);                                          \
-        for (_pt_i = 0; _pt_i < POLYONTEST_FFF_ARG_HISTORY_LEN; ++_pt_i) {       \
+        POT_FAKE_RESET(fn_name);                                          \
+        for (_pt_i = 0; _pt_i < POT_FFF_ARG_HISTORY_LEN; ++_pt_i) {       \
             fn_name##_arg0_history[_pt_i] = 0;                                 \
         }                                                                      \
         fn_name##_arg0_val = 0;                                                \
     } while (0)
 
-#define POLYONTEST_FAKE_RESET_VOID2(fn_name)                                     \
+#define POT_FAKE_RESET_VOID2(fn_name)                                     \
     do {                                                                       \
         unsigned _pt_i;                                                        \
-        POLYONTEST_FAKE_RESET(fn_name);                                          \
-        for (_pt_i = 0; _pt_i < POLYONTEST_FFF_ARG_HISTORY_LEN; ++_pt_i) {       \
+        POT_FAKE_RESET(fn_name);                                          \
+        for (_pt_i = 0; _pt_i < POT_FFF_ARG_HISTORY_LEN; ++_pt_i) {       \
             fn_name##_arg0_history[_pt_i] = 0;                                 \
             fn_name##_arg1_history[_pt_i] = 0;                                 \
         }                                                                      \
@@ -187,19 +187,19 @@ extern "C" {
         fn_name##_arg1_val = 0;                                                \
     } while (0)
 
-/* Short aliases matching FFF naming when POLYONTEST_FFF_ALIASES is set. */
-#ifdef POLYONTEST_FFF_ALIASES
-#define FAKE_VALUE_FUNC0 POLYONTEST_FAKE_VALUE_FUNC0
-#define FAKE_VALUE_FUNC1 POLYONTEST_FAKE_VALUE_FUNC1
-#define FAKE_VALUE_FUNC2 POLYONTEST_FAKE_VALUE_FUNC2
-#define FAKE_VOID_FUNC0 POLYONTEST_FAKE_VOID_FUNC0
-#define FAKE_VOID_FUNC1 POLYONTEST_FAKE_VOID_FUNC1
-#define FAKE_VOID_FUNC2 POLYONTEST_FAKE_VOID_FUNC2
-#define RESET_FAKE POLYONTEST_FAKE_RESET
+/* Short aliases matching FFF naming when POT_FFF_ALIASES is set. */
+#ifdef POT_FFF_ALIASES
+#define FAKE_VALUE_FUNC0 POT_FAKE_VALUE_FUNC0
+#define FAKE_VALUE_FUNC1 POT_FAKE_VALUE_FUNC1
+#define FAKE_VALUE_FUNC2 POT_FAKE_VALUE_FUNC2
+#define FAKE_VOID_FUNC0 POT_FAKE_VOID_FUNC0
+#define FAKE_VOID_FUNC1 POT_FAKE_VOID_FUNC1
+#define FAKE_VOID_FUNC2 POT_FAKE_VOID_FUNC2
+#define RESET_FAKE POT_FAKE_RESET
 #endif
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* POLYONTEST_FFF_FAKES_H */
+#endif /* POT_FFF_FAKES_H */

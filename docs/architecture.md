@@ -9,9 +9,9 @@ depend inward; **core never imports** a concrete UART, USB, board, or reporter.
 ```mermaid
 flowchart TB
   subgraph target [DUT / on-target]
-    harness["C harness\n(harness/c + amalgam)"]
+    harness["C harness\n(harness/c)"]
     tests[User TEST cases]
-    writer["Writer hook\n(stdout or polyontest_set_writer)"]
+    writer["Writer hook\n(stdout or pot_set_writer)"]
     tests --> harness
     harness --> writer
   end
@@ -59,7 +59,6 @@ flowchart TB
 | Builtins | `crates/polyontest-builtins` | In-tree host/QEMU/codec/reporter impls |
 | Protocol | `crates/polyontest-protocol` | Codec-agnostic `Event` enum |
 | On-target domain | `harness/c`, `harness/include` | Runner, asserts, registration |
-| Drop-in amalgam | `dist/polyontest.h`, `dist/polyontest.c` | Generated via `scripts/amalgamate.py` |
 
 ## SOLID mapping
 
@@ -76,7 +75,7 @@ flowchart TB
 | Side | Mechanism |
 |------|-----------|
 | Host | Rust traits + in-tree builtins |
-| Target | Compile-time hooks (`polyontest_set_writer`, section/ctors) — no dlopen |
+| Target | Compile-time hooks (`pot_set_writer`, section/ctors) — no dlopen |
 
 !!! note "QEMU `transport = \"uart\"`"
     For `qemu_m33`, the logical transport id is `uart`, but I/O is **semihosting
@@ -122,7 +121,7 @@ flowchart LR
   end
   subgraph sink [Output]
     defaultOut[Default stdout writer]
-    custom["polyontest_set_writer(...)"]
+    custom["pot_set_writer(...)"]
   end
   subgraph framing [Framing]
     cobs["COBS + PTWP binary\n(default when not MINIMAL_PRINT)"]
@@ -144,7 +143,7 @@ flowchart LR
 ## PTWP events
 
 Structured results use COBS-framed PTWP payloads (`codec = "cobs"`). Hobbyists
-can use `POLYONTEST_MINIMAL_PRINT` / `codec = "text"` instead.
+can use `POT_MINIMAL_PRINT` / `codec = "text"` instead.
 
 | Event (protocol) | Typical meaning |
 |------------------|-----------------|
@@ -156,11 +155,11 @@ can use `POLYONTEST_MINIMAL_PRINT` / `codec = "text"` instead.
 
 ## Size profiles and discovery
 
-Compile-time profiles (`POLYONTEST_PROFILE_TINY` / `SMALL` / `FULL`) map to
-`POLYONTEST_CFG_HAS_*` feature macros. See [Profiles](profiles.md).
+Compile-time profiles (`POT_PROFILE_TINY` / `SMALL` / `FULL`) map to
+`POT_CFG_HAS_*` feature macros. See [Profiles](profiles.md).
 
 Default discovery uses `__attribute__((constructor))`. Optional
-`POLYONTEST_USE_SECTION_REGISTRY` walks `.polyontest_info` / `__DATA,polyontest`.
+`POT_USE_SECTION_REGISTRY` walks `.pot_info` / `__DATA,pot`.
 Linker details live on the profiles page.
 
 ## Related

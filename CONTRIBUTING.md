@@ -18,15 +18,12 @@ cargo test --workspace
 cmake -S examples/host_c -B build/host_c
 cmake --build build/host_c
 ./build/host_c/host_c_tests
-
-# Amalgamate drop-in
-python3 scripts/amalgamate.py
 ```
 
 ## Design rules
 
 1. **SOLID plugins** — new transports/codecs/boards/reporters are plugins; do not bake them into Core.
-2. **Core stays tiny** — `harness/c` and the amalgam must remain `no_std`-friendly.
+2. **Core stays tiny** — `harness/c` must remain `no_std`-friendly.
 3. **Progressive enhancement** — hobby Core stream must not pay for Command/HIL features.
 4. Prefer open-source dependencies only.
 

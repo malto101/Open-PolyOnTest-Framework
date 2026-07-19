@@ -17,7 +17,7 @@ or CI environments until a fix or mitigation is available.
 In scope:
 
 * The PolyOnTest Core harness, CLI, protocol codecs, and first-party plugins
-* Supply-chain concerns in release artifacts (`dist/polyontest.h`, `dist/polyontest.c`)
+* Supply-chain concerns in repository sources
 
 Out of scope:
 

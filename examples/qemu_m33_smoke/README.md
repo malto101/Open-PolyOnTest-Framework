@@ -19,12 +19,12 @@ Freestanding Cortex-M33 firmware for **QEMU `mps2-an505`**.
 # small (default) — tags/fixtures/COBS
 cmake -S examples/qemu_m33_smoke -B build/qemu_m33 \
   -DCMAKE_TOOLCHAIN_FILE=$PWD/examples/qemu_m33_smoke/toolchain-arm-none-eabi.cmake \
-  -DPOLYONTEST_PROFILE=small
+  -DPOT_PROFILE=small
 
 # tiny — text only, smallest text size
 cmake -S examples/qemu_m33_smoke -B build/qemu_tiny \
   -DCMAKE_TOOLCHAIN_FILE=$PWD/examples/qemu_m33_smoke/toolchain-arm-none-eabi.cmake \
-  -DPOLYONTEST_PROFILE=tiny
+  -DPOT_PROFILE=tiny
 
 cmake --build build/qemu_m33   # or build/qemu_tiny
 ```
@@ -38,4 +38,4 @@ cargo run -p polyontest -- run --target qemu_m33 \
   --config examples/qemu_m33_smoke/polyontest.toml
 ```
 
-Firmware is **~1.7 KB** text with `POLYONTEST_FREESTANDING` (no newlib).
+Firmware is **~1.7 KB** text with `POT_FREESTANDING` (no newlib).

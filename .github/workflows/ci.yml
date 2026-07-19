@@ -10,8 +10,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - name: Amalgamate
-        run: python3 scripts/amalgamate.py
       - name: Build CLI
         run: cargo build -p polyontest
       - name: Test Rust workspace
